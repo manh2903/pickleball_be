@@ -26,16 +26,6 @@ const Booking = sequelize.define('Booking', {
     allowNull: false,
     references: { model: 'venues', key: 'id' },
   },
-  court_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: { model: 'courts', key: 'id' },
-  },
-  slot_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    references: { model: 'time_slots', key: 'id' },
-  },
   // Walk-in customer info (when user has no account)
   customer_name: {
     type: DataTypes.STRING(100),
@@ -140,7 +130,6 @@ const Booking = sequelize.define('Booking', {
   indexes: [
     { fields: ['user_id'] },
     { fields: ['venue_id'] },
-    { fields: ['court_id', 'slot_id'] },
     { fields: ['status'] },
     { unique: true, fields: ['booking_code'] },
   ],

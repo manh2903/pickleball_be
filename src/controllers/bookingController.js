@@ -75,12 +75,10 @@ const createBooking = async (req, res, next) => {
     if (slots.length !== ids.length) throw new ApiError(404, 'Một số khung giờ không tồn tại');
     
     const venueId = slots[0].venue_id;
-    const courtId = slots[0].court_id;
     
     for (const s of slots) {
       if (s.status !== 'available') throw new ApiError(409, `Slot ${s.start_time} đã được đặt`);
       if (s.venue_id !== venueId) throw new ApiError(400, 'Tất cả slot phải cùng một địa điểm');
-      if (s.court_id !== courtId) throw new ApiError(400, 'Tất cả slot phải cùng một sân');
     }
 
     let totalPrice = slots.reduce((sum, s) => sum + parseFloat(s.price), 0);
@@ -129,7 +127,6 @@ const createBooking = async (req, res, next) => {
       booking_code: bookingCode,
       user_id: user.id,
       venue_id: venueId,
-      court_id: courtId,
       booking_type: 'online',
       status: 'confirmed',
       total_price: totalPrice,
@@ -265,8 +262,11 @@ const getMyBookings = async (req, res, next) => {
     const { count, rows } = await db.Booking.findAndCountAll({
       where,
       include: [
-        { model: db.Court, as: 'court', include: [{ model: db.Venue, as: 'venue', attributes: ['name', 'address'] }] },
-        { model: db.TimeSlot, as: 'slots', attributes: ['date', 'start_time', 'end_time'] },
+        { 
+          model: db.TimeSlot, as: 'slots', 
+          attributes: ['date', 'start_time', 'end_time'],
+          include: [{ model: db.Court, as: 'court', include: [{ model: db.Venue, as: 'venue', attributes: ['name', 'address'] }] }] 
+        },
         { model: db.Payment, as: 'payments', attributes: ['method', 'status'] },
       ],
       order: [['created_at', 'DESC']],
@@ -280,15 +280,34 @@ const getMyBookings = async (req, res, next) => {
 
 const getBookingById = async (req, res, next) => {
   try {
-    const booking = await db.Booking.findByPk(req.params.id, {
+    const idOrCode = req.params.id;
+    const isCode = isNaN(Number(idOrCode));
+    const where = isCode ? { booking_code: idOrCode } : { id: idOrCode };
+
+    const booking = await db.Booking.findOne({
+      where,
       include: [
-        { model: db.Court, as: 'court', include: [{ model: db.Venue, as: 'venue' }] },
-        { model: db.TimeSlot, as: 'slots' },
+        { 
+          model: db.TimeSlot, as: 'slots',
+          include: [{ model: db.Court, as: 'court', include: [{ model: db.Venue, as: 'venue' }] }] 
+        },
         { model: db.User, as: 'user', attributes: ['id', 'name', 'phone'] },
         { model: db.Payment, as: 'payments' },
       ],
     });
+
     if (!booking) throw new ApiError(404, 'Không tìm thấy booking');
+    
+    // Privacy Check: User can see their own, Owner sees their venue's, Admin sees all
+    const isOwner = booking.slots?.[0]?.court?.venue?.owner_id === req.user?.id;
+    const isUser = booking.user_id === req.user?.id;
+    const isAdmin = req.user?.role === 'admin';
+    const isStaff = req.user?.role === 'staff';
+
+    if (!isUser && !isOwner && !isAdmin && !isStaff) {
+       throw new ApiError(403, 'Bạn không có quyền truy cập thông tin này');
+    }
+
     res.json({ success: true, data: booking });
   } catch (err) { next(err); }
 };
@@ -330,7 +349,6 @@ const createWalkInBooking = async (req, res, next) => {
     const booking = await db.Booking.create({
       booking_code: bookingCode,
       venue_id: slots[0].venue_id,
-      court_id: slots[0].court_id,
       customer_name, customer_phone, customer_email,
       booking_type: 'walkin', status: 'confirmed',
       total_price: totalPrice, payment_status: 'unpaid', payment_method: 'cash',
@@ -344,30 +362,74 @@ const createWalkInBooking = async (req, res, next) => {
 
 const ownerGetVenueBookings = async (req, res, next) => {
   try {
-    const { status, venue_id } = req.query;
-    const venues = await db.Venue.findAll({ where: { owner_id: req.user.id } });
-    const ids = venues.map(v => v.id);
-    const where = { venue_id: { [Op.in]: ids } };
-    if (status) where.status = status;
-    const items = await db.Booking.findAll({
+    const { status, venue_id, search, page = 1, limit = 10 } = req.query;
+    
+    // 1. Determine venues context
+    let venueIds = [];
+    if (venue_id) {
+       // Verify ownership/staff access
+       const v = await db.Venue.findOne({ where: { id: venue_id, owner_id: req.user.id } });
+       if (!v && req.user.role !== 'admin') throw new ApiError(403, 'Không có quyền truy cập cơ sở này');
+       venueIds = [venue_id];
+    } else {
+       const venues = await db.Venue.findAll({ where: { owner_id: req.user.id }, attributes: ['id'] });
+       venueIds = venues.map(v => v.id);
+    }
+    
+    // 2. Build filter
+    const where = { venue_id: { [Op.in]: venueIds } };
+    if (status && status !== 'all') where.status = status;
+    
+    if (search) {
+      where[Op.or] = [
+        { booking_code: { [Op.like]: `%${search}%` } },
+        { customer_name: { [Op.like]: `%${search}%` } },
+        { customer_phone: { [Op.like]: `%${search}%` } },
+        { '$user.name$': { [Op.like]: `%${search}%` } },
+        { '$user.phone$': { [Op.like]: `%${search}%` } },
+      ];
+    }
+
+    // 3. Execution
+    const { count, rows } = await db.Booking.findAndCountAll({
       where,
       include: [
-        { model: db.Court, as: 'court' },
-        { model: db.TimeSlot, as: 'slots' },
-        { model: db.User, as: 'user', attributes: ['name', 'phone'] },
+        { 
+          model: db.TimeSlot, as: 'slots', 
+          attributes: ['date', 'start_time', 'end_time'],
+          include: [{ model: db.Court, as: 'court', attributes: ['id', 'name'] }] 
+        },
+        { model: db.User, as: 'user', attributes: ['id', 'name', 'phone', 'email'] },
       ],
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
+      limit: parseInt(limit),
+      offset: (parseInt(page) - 1) * parseInt(limit),
+      distinct: true,
+      subQuery: false // Required for complex includes with limit
     });
-    res.json({ success: true, data: { bookings: items } });
-  } catch (err) { next(err); }
+
+    res.json({ 
+      success: true, 
+      data: { 
+        bookings: rows, 
+        total: count,
+        page: parseInt(page),
+        totalPages: Math.ceil(count / parseInt(limit))
+      } 
+    });
+  } catch (err) { 
+    next(err); 
+  }
 };
 
 const ownerGetBookingDetail = async (req, res, next) => {
   try {
     const booking = await db.Booking.findByPk(req.params.id, {
       include: [
-        { model: db.Court, as: 'court', include: [{ model: db.Venue, as: 'venue' }] },
-        { model: db.TimeSlot, as: 'slots' },
+        { 
+          model: db.TimeSlot, as: 'slots',
+          include: [{ model: db.Court, as: 'court', include: [{ model: db.Venue, as: 'venue' }] }] 
+        },
         { model: db.User, as: 'user', attributes: ['name', 'phone', 'email'] },
       ],
     });
@@ -383,8 +445,10 @@ const getAllBookings = async (req, res, next) => {
     const { count, rows } = await db.Booking.findAndCountAll({
       where,
       include: [
-        { model: db.Court, as: 'court', attributes: ['name'] },
-        { model: db.TimeSlot, as: 'slots' },
+        { 
+          model: db.TimeSlot, as: 'slots',
+          include: [{ model: db.Court, as: 'court', attributes: ['name'] }] 
+        },
         { model: db.User, as: 'user', attributes: ['name', 'phone'] },
       ],
       order: [['created_at', 'DESC']],

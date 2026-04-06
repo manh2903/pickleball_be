@@ -44,7 +44,6 @@ Venue.hasMany(Coupon, { foreignKey: 'venue_id', as: 'coupons' });
 // ---- Court (Tier 3 - Sân con) ----
 Court.belongsTo(Venue, { foreignKey: 'venue_id', as: 'venue' });
 Court.hasMany(TimeSlot, { foreignKey: 'court_id', as: 'timeSlots' });
-Court.hasMany(Booking, { foreignKey: 'court_id', as: 'bookings' });
 Court.hasMany(Review, { foreignKey: 'court_id', as: 'reviews' });
 Court.hasMany(Incident, { foreignKey: 'court_id', as: 'incidents' });
 
@@ -56,7 +55,6 @@ TimeSlot.belongsTo(Booking, { foreignKey: 'booking_id', as: 'mainBooking' });
 // ---- Booking ----
 Booking.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 Booking.belongsTo(Venue, { foreignKey: 'venue_id', as: 'venue' });
-Booking.belongsTo(Court, { foreignKey: 'court_id', as: 'court' });
 Booking.hasMany(TimeSlot, { foreignKey: 'booking_id', as: 'slots' });
 Booking.belongsTo(Coupon, { foreignKey: 'coupon_id', as: 'coupon' });
 Booking.hasMany(Payment, { foreignKey: 'booking_id', as: 'payments' });

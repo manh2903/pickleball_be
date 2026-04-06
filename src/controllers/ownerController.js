@@ -166,8 +166,93 @@ const createVenueStaff = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /api/owner/venues/:id/reports
+ * Get detailed financial/booking reports for a specific venue
+ */
+const getReports = async (req, res, next) => {
+  try {
+    const venueId = req.params.id;
+    const { period = '7days' } = req.query;
+
+    // Verify ownership
+    const venue = await db.Venue.findOne({ where: { id: venueId, owner_id: req.user.id } });
+    if (!venue) throw new ApiError(403, 'Bạn không có quyền quản lý địa điểm này');
+
+    // Define time range
+    let startDate = new Date();
+    if (period === 'today') {
+      startDate.setHours(0, 0, 0, 0);
+    } else if (period === '7days') {
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (period === '30days') {
+      startDate.setDate(startDate.getDate() - 30);
+    } else if (period === 'thisMonth') {
+      startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    }
+
+    // 1. Core KPIs
+    const totalBookings = await db.Booking.count({
+      where: { venue_id: venueId, created_at: { [Op.gte]: startDate }, status: { [Op.ne]: 'cancelled' } }
+    });
+
+    const totalRevenueResult = await db.Booking.sum('owner_revenue', {
+      where: { venue_id: venueId, created_at: { [Op.gte]: startDate }, status: { [Op.ne]: 'cancelled' }, payment_status: 'paid' }
+    });
+
+    const avgBookingValue = totalBookings > 0 ? (totalRevenueResult || 0) / totalBookings : 0;
+
+    // 2. Daily Revenue (for chart)
+    const dailyRevenue = await db.Booking.findAll({
+      attributes: [
+        [db.sequelize.fn('DATE', db.sequelize.col('created_at')), 'date'],
+        [db.sequelize.fn('SUM', db.sequelize.col('owner_revenue')), 'revenue'],
+        [db.sequelize.fn('COUNT', db.sequelize.col('id')), 'bookings']
+      ],
+      where: { venue_id: venueId, created_at: { [Op.gte]: startDate }, status: { [Op.ne]: 'cancelled' }, payment_status: 'paid' },
+      group: [db.sequelize.fn('DATE', db.sequelize.col('created_at'))],
+      order: [[db.sequelize.fn('DATE', db.sequelize.col('created_at')), 'ASC']]
+    });
+
+    // 3. Top Courts
+    const topCourts = await db.Booking.findAll({
+      attributes: [
+        [db.sequelize.col('court.name'), 'name'],
+        [db.sequelize.fn('COUNT', db.sequelize.col('Booking.id')), 'value']
+      ],
+      include: [{ model: db.Court, as: 'court', attributes: [] }],
+      where: { venue_id: venueId, created_at: { [Op.gte]: startDate }, status: { [Op.ne]: 'cancelled' } },
+      group: ['court.id', 'court.name'],
+      order: [[db.sequelize.fn('COUNT', db.sequelize.col('Booking.id')), 'DESC']],
+      limit: 5,
+      raw: true
+    });
+
+    res.json({
+      success: true,
+      data: {
+        totalRevenue: totalRevenueResult || 0,
+        totalBookings,
+        avgBookingValue,
+        dailyRevenue: dailyRevenue.map(r => ({
+          date: r.get('date'),
+          revenue: parseFloat(r.get('revenue')),
+          bookings: parseInt(r.get('bookings'))
+        })),
+        topCourts: topCourts.map(c => ({
+          name: c.name,
+          value: parseInt(c.value)
+        }))
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getStats,
   getVenueStaffs,
-  createVenueStaff
+  createVenueStaff,
+  getReports
 };

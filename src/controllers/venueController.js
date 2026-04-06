@@ -173,6 +173,24 @@ const createVenue = async (req, res, next) => {
 };
 
 /**
+ * GET /api/owner/venues/:id — Owner's own venue detail
+ */
+const getOwnerVenueById = async (req, res, next) => {
+  try {
+    const venue = await db.Venue.findOne({
+      where: { id: req.params.id, owner_id: req.user.id },
+      include: [
+        { model: db.Court, as: 'courts' },
+      ],
+    });
+    if (!venue) throw new ApiError(404, 'Không tìm thấy địa điểm hoặc bạn không có quyền');
+    res.json({ success: true, data: venue });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
  * PUT /api/owner/venues/:id — Update venue (owner must own it)
  */
 const updateVenue = async (req, res, next) => {
@@ -283,6 +301,6 @@ const adminSetCommission = async (req, res, next) => {
 
 module.exports = {
   getVenues, getVenueById,
-  getOwnerVenues, createVenue, updateVenue,
+  getOwnerVenues, getOwnerVenueById, createVenue, updateVenue,
   adminGetAllVenues, adminUpdateVenueStatus, adminSetCommission,
 };
