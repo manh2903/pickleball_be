@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/authMiddleware');
-const { getStats, getVenueStaffs, createVenueStaff, getReports } = require('../controllers/ownerController');
+const { getStats, getVenueStaffs, createVenueStaff, getReports, updateStaffPassword, updateStaff } = require('../controllers/ownerController');
 const { ownerGetVenueBookings, ownerGetBookingDetail } = require('../controllers/bookingController');
 const { getOwnerVenues, getOwnerVenueById, createVenue, updateVenue } = require('../controllers/venueController');
 const { ownerGetCourts, createCourt, updateCourt, deleteCourt } = require('../controllers/courtController');
@@ -35,5 +35,7 @@ router.delete('/venues/:venueId/courts/:id', deleteCourt);
 // === Staff Management ===
 router.get('/venues/:id/staffs', getVenueStaffs);
 router.post('/venues/:id/staffs', createVenueStaff);
+router.put('/staffs/:id', updateStaff);
+router.patch('/staffs/:id/password', updateStaffPassword);
 
 module.exports = router;

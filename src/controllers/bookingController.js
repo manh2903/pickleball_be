@@ -25,7 +25,11 @@ const getAvailability = async (req, res, next) => {
         order: [['start_time', 'ASC']],
       });
     } else if (venue_id) {
-      const venue = await db.Venue.findByPk(venue_id, {
+      const isSlug = isNaN(Number(venue_id));
+      const venueWhere = isSlug ? { slug: venue_id } : { id: venue_id };
+      
+      const venue = await db.Venue.findOne({
+        where: venueWhere,
         include: [{ model: db.Court, as: 'courts' }]
       });
       if (!venue) throw new ApiError(404, 'Không tìm thấy địa điểm');

@@ -51,8 +51,17 @@ const createReview = async (req, res, next) => {
  */
 const getVenueReviews = async (req, res, next) => {
   try {
-    const { venueId } = req.params;
+    const { venueId: venueIdParam } = req.params;
     const { page = 1, limit = 10 } = req.query;
+
+    const isSlug = isNaN(Number(venueIdParam));
+    let venueId = venueIdParam;
+
+    if (isSlug) {
+      const venue = await db.Venue.findOne({ where: { slug: venueIdParam }, attributes: ['id'] });
+      if (!venue) throw new ApiError(404, 'Không tìm thấy địa điểm');
+      venueId = venue.id;
+    }
 
     const { count, rows } = await db.Review.findAndCountAll({
       where: { venue_id: venueId, is_visible: true },

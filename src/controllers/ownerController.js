@@ -250,9 +250,66 @@ const getReports = async (req, res, next) => {
   }
 };
 
+/**
+ * PATCH /api/owner/staffs/:id/password
+ */
+const updateStaffPassword = async (req, res, next) => {
+  try {
+    const staffId = req.params.id;
+    const { password } = req.body;
+
+    const staff = await db.User.findOne({ where: { id: staffId, role: 'staff' } });
+    if (!staff) throw new ApiError(404, 'Không tìm thấy nhân viên');
+
+    // Verify ownership (the venue the staff belongs to must be owned by req.user)
+    const venue = await db.Venue.findOne({ where: { id: staff.venue_id, owner_id: req.user.id } });
+    if (!venue) throw new ApiError(403, 'Bạn không có quyền quản lý nhân viên này');
+
+    const bcrypt = require('bcryptjs');
+    const password_hash = await bcrypt.hash(password, 10);
+    
+    await staff.update({ password_hash });
+
+    res.json({ success: true, message: 'Cập nhật mật khẩu thành công' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * PUT /api/owner/staffs/:id
+ */
+const updateStaff = async (req, res, next) => {
+  try {
+    const staffId = req.params.id;
+    const { name, email, phone, status } = req.body;
+
+    const staff = await db.User.findOne({ where: { id: staffId, role: 'staff' } });
+    if (!staff) throw new ApiError(404, 'Không tìm thấy nhân viên');
+
+    // Verify ownership
+    const venue = await db.Venue.findOne({ where: { id: staff.venue_id, owner_id: req.user.id } });
+    if (!venue) throw new ApiError(403, 'Bạn không có quyền quản lý nhân viên này');
+
+    // Check if email taken by ANOTHER user
+    if (email && email !== staff.email) {
+      const existing = await db.User.findOne({ where: { email, id: { [Op.ne]: staffId } } });
+      if (existing) throw new ApiError(400, 'Email này đã được sử dụng bởi người khác');
+    }
+
+    await staff.update({ name, email, phone, status });
+
+    res.json({ success: true, message: 'Cập nhật thông tin thành công', data: staff });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getStats,
   getVenueStaffs,
   createVenueStaff,
-  getReports
+  getReports,
+  updateStaffPassword,
+  updateStaff
 };

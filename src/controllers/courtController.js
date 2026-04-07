@@ -18,8 +18,18 @@ const assertOwnsVenue = async (ownerId, venueId) => {
  */
 const getCourtsInVenue = async (req, res, next) => {
   try {
+    const venueIdParam = req.params.venueId;
+    const isSlug = isNaN(Number(venueIdParam));
+    let venueId = venueIdParam;
+
+    if (isSlug) {
+      const venue = await db.Venue.findOne({ where: { slug: venueIdParam }, attributes: ['id'] });
+      if (!venue) throw new ApiError(404, 'Không tìm thấy địa điểm');
+      venueId = venue.id;
+    }
+
     const courts = await db.Court.findAll({
-      where: { venue_id: req.params.venueId, status: { [Op.ne]: 'inactive' } },
+      where: { venue_id: venueId, status: { [Op.ne]: 'inactive' } },
       include: [{ model: db.Venue, as: 'venue', attributes: ['id', 'name', 'default_price_morning', 'default_price_afternoon', 'default_price_evening', 'default_price_weekend_surcharge'] }],
       order: [['sort_order', 'ASC']],
     });
@@ -34,8 +44,18 @@ const getCourtsInVenue = async (req, res, next) => {
  */
 const getCourtById = async (req, res, next) => {
   try {
+    const venueIdParam = req.params.venueId;
+    const isSlug = isNaN(Number(venueIdParam));
+    let venueId = venueIdParam;
+
+    if (isSlug) {
+      const venue = await db.Venue.findOne({ where: { slug: venueIdParam }, attributes: ['id'] });
+      if (!venue) throw new ApiError(404, 'Không tìm thấy địa điểm');
+      venueId = venue.id;
+    }
+
     const court = await db.Court.findOne({
-      where: { id: req.params.id, venue_id: req.params.venueId },
+      where: { id: req.params.id, venue_id: venueId },
       include: [
         { model: db.Venue, as: 'venue' },
         {
