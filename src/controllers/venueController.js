@@ -7,11 +7,8 @@ const { Op } = require('sequelize');
  */
 const getVenues = async (req, res, next) => {
   try {
-    const { city, district, search, price_min, price_max, types, amenities, min_rating, page = 1, limit = 12 } = req.query;
+    const { search, price_min, price_max, types, amenities, min_rating, page = 1, limit = 12 } = req.query;
     const where = { status: 'active' };
-
-    if (city) where.city = city;
-    if (district) where.district = district;
     if (search) {
       where[Op.or] = [
         { name: { [Op.like]: `%${search}%` } },
@@ -32,6 +29,11 @@ const getVenues = async (req, res, next) => {
       where.amenities = { [Op.and]: amenityList.map(a => ({ [Op.like]: `%${a}%` })) };
     }
 
+    // New Location filtering by ID
+    const { province_id, ward_id } = req.query;
+    if (province_id) where.province_id = province_id;
+    if (ward_id) where.ward_id = ward_id;
+
     const { count, rows } = await db.Venue.findAndCountAll({
       where,
       include: [
@@ -39,6 +41,8 @@ const getVenues = async (req, res, next) => {
           model: db.Court, as: 'courts', where: { status: 'active' }, required: false,
           attributes: ['id', 'name', 'type', 'status'] 
         },
+        { model: db.Province, as: 'provinceState', attributes: ['ten_tinh'] },
+        { model: db.Ward, as: 'wardState', attributes: ['ten'] },
       ],
       order: [['sort_order', 'ASC'], ['id', 'DESC']],
       limit: parseInt(limit),
@@ -57,16 +61,8 @@ const getVenues = async (req, res, next) => {
         raw: true,
       });
       const plain = venue.toJSON();
-      // Parse JSON strings that MySQL may return as raw strings
-      const parseJSON = (val) => {
-        if (Array.isArray(val)) return val;
-        if (typeof val === 'string') { try { return JSON.parse(val); } catch { return []; } }
-        return val ?? [];
-      };
       return {
         ...plain,
-        amenities: parseJSON(plain.amenities),
-        images: parseJSON(plain.images),
         avg_rating: parseFloat(ratingResult?.avg_rating || 0).toFixed(1),
         review_count: parseInt(ratingResult?.review_count || 0),
         court_count: venue.courts?.length || 0,
@@ -81,9 +77,9 @@ const getVenues = async (req, res, next) => {
       success: true,
       data: {
         venues: venuesWithMeta,
-        total: venuesWithMeta.length, // If filtered by rating, count changes
+        total: count,                                            // ← full DB count, not page slice
         page: parseInt(page),
-        totalPages: Math.ceil(venuesWithMeta.length / parseInt(limit)),
+        totalPages: Math.ceil(count / parseInt(limit)),
       },
     });
   } catch (err) {
@@ -115,25 +111,11 @@ const getVenueById = async (req, res, next) => {
           limit: 10,
           order: [['created_at', 'DESC']],
         },
+        { model: db.Province, as: 'provinceState', attributes: ['ma_tinh', 'ten_tinh'] },
+        { model: db.Ward, as: 'wardState', attributes: ['ma', 'ten'] },
       ],
     });
-    if (!venue) throw new ApiError(404, 'Không tìm thấy địa điểm');
-    const parseJSON = (val) => {
-      if (Array.isArray(val)) return val;
-      if (typeof val === 'string') { try { return JSON.parse(val); } catch { return []; } }
-      return val ?? [];
-    };
-    const data = venue.toJSON();
-    data.amenities = parseJSON(data.amenities);
-    data.images = parseJSON(data.images);
-    if (data.courts) {
-      data.courts = data.courts.map(c => ({
-        ...c,
-        amenities: parseJSON(c.amenities),
-        images: parseJSON(c.images),
-      }));
-    }
-    res.json({ success: true, data });
+    res.json({ success: true, data: venue });
   } catch (err) {
     next(err);
   }
@@ -149,7 +131,9 @@ const getOwnerVenues = async (req, res, next) => {
     const venues = await db.Venue.findAll({
       where: { owner_id: req.user.id },
       include: [
-        { model: db.Court, as: 'courts', attributes: ['id', 'name', 'status'] },
+        { model: db.Court, as: 'courts', attributes: ['id', 'name', 'type', 'status'] },
+        { model: db.Province, as: 'provinceState', attributes: ['ten_tinh'] },
+        { model: db.Ward, as: 'wardState', attributes: ['ten'] },
       ],
       order: [['created_at', 'DESC']],
     });
@@ -165,11 +149,12 @@ const getOwnerVenues = async (req, res, next) => {
 const createVenue = async (req, res, next) => {
   try {
     const {
-      name, address, city, district, latitude, longitude,
+      name, address, latitude, longitude,
       description, images, amenities, phone,
       open_time, close_time,
       default_price_morning, default_price_afternoon, default_price_evening,
       default_price_weekend_surcharge, cancel_policy,
+      province_id, ward_id,
     } = req.body;
 
     // Generate slug from name
@@ -177,7 +162,7 @@ const createVenue = async (req, res, next) => {
 
     const venue = await db.Venue.create({
       owner_id: req.user.id,
-      name, slug, address, city, district, latitude, longitude,
+      name, slug, address, latitude, longitude,
       description,
       images: images || [],
       amenities: amenities || [],
@@ -188,6 +173,7 @@ const createVenue = async (req, res, next) => {
       default_price_weekend_surcharge: default_price_weekend_surcharge || 0,
       cancel_policy: cancel_policy || null,
       status: 'pending_review', // Must be approved by admin
+      province_id, ward_id,
     });
 
     res.status(201).json({

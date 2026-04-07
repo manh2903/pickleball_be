@@ -1,0 +1,3139 @@
+[
+  {
+    "ma_tinh": "01",
+    "ten_tinh": "Thành phố Hà Nội",
+    "loai": "Thành phố trực thuộc Trung ương",
+    "tinh_ly": "Hà Nội",
+    "phuong_xa": [
+      {
+        "ma": "00001",
+        "ten": "Phường Phúc Xá",
+        "loai": "phường"
+      },
+      {
+        "ma": "00004",
+        "ten": "Phường Trúc Bạch",
+        "loai": "phường"
+      },
+      {
+        "ma": "00006",
+        "ten": "Phường Vĩnh Phúc",
+        "loai": "phường"
+      },
+      {
+        "ma": "00007",
+        "ten": "Phường Cống Vị",
+        "loai": "phường"
+      },
+      {
+        "ma": "00008",
+        "ten": "Phường Liễu Giai",
+        "loai": "phường"
+      },
+      {
+        "ma": "00010",
+        "ten": "Phường Nguyễn Trung Trực",
+        "loai": "phường"
+      },
+      {
+        "ma": "00013",
+        "ten": "Phường Quán Thánh",
+        "loai": "phường"
+      },
+      {
+        "ma": "00016",
+        "ten": "Phường Ngọc Hà",
+        "loai": "phường"
+      },
+      {
+        "ma": "00019",
+        "ten": "Phường Điện Biên",
+        "loai": "phường"
+      },
+      {
+        "ma": "00022",
+        "ten": "Phường Đội Cấn",
+        "loai": "phường"
+      },
+      {
+        "ma": "00025",
+        "ten": "Phường Ngọc Khánh",
+        "loai": "phường"
+      },
+      {
+        "ma": "00028",
+        "ten": "Phường Kim Mã",
+        "loai": "phường"
+      },
+      {
+        "ma": "00031",
+        "ten": "Phường Giảng Võ",
+        "loai": "phường"
+      },
+      {
+        "ma": "00034",
+        "ten": "Phường Thành Công",
+        "loai": "phường"
+      },
+      {
+        "ma": "00037",
+        "ten": "Phường Hoàn Kiếm",
+        "loai": "phường"
+      },
+      {
+        "ma": "00040",
+        "ten": "Phường Hàng Bạc",
+        "loai": "phường"
+      },
+      {
+        "ma": "00043",
+        "ten": "Phường Hàng Gai",
+        "loai": "phường"
+      },
+      {
+        "ma": "00046",
+        "ten": "Phường Chương Dương",
+        "loai": "phường"
+      },
+      {
+        "ma": "00049",
+        "ten": "Phường Hàng Trống",
+        "loai": "phường"
+      },
+      {
+        "ma": "00052",
+        "ten": "Phường Cửa Nam",
+        "loai": "phường"
+      },
+      {
+        "ma": "00055",
+        "ten": "Phường Hàng Bông",
+        "loai": "phường"
+      },
+      {
+        "ma": "00058",
+        "ten": "Phường Tràng Tiền",
+        "loai": "phường"
+      },
+      {
+        "ma": "00061",
+        "ten": "Phường Trần Hưng Đạo",
+        "loai": "phường"
+      },
+      {
+        "ma": "00064",
+        "ten": "Phường Phan Chu Trinh",
+        "loai": "phường"
+      },
+      {
+        "ma": "00067",
+        "ten": "Phường Hàng Bài",
+        "loai": "phường"
+      },
+      {
+        "ma": "00070",
+        "ten": "Phường Đồng Xuân",
+        "loai": "phường"
+      },
+      {
+        "ma": "00073",
+        "ten": "Phường Hàng Mã",
+        "loai": "phường"
+      },
+      {
+        "ma": "00076",
+        "ten": "Phường Cầu Đông",
+        "loai": "phường"
+      },
+      {
+        "ma": "00079",
+        "ten": "Phường Lý Thái Tổ",
+        "loai": "phường"
+      },
+      {
+        "ma": "00082",
+        "ten": "Phường Hàng Buồm",
+        "loai": "phường"
+      },
+      {
+        "ma": "00085",
+        "ten": "Phường Hàng Đào",
+        "loai": "phường"
+      },
+      {
+        "ma": "00088",
+        "ten": "Phường Hàng Bồ",
+        "loai": "phường"
+      },
+      {
+        "ma": "00091",
+        "ten": "Phường Cửa Đông",
+        "loai": "phường"
+      },
+      {
+        "ma": "00094",
+        "ten": "Phường Lý Quốc Sư",
+        "loai": "phường"
+      },
+      {
+        "ma": "00097",
+        "ten": "Phường Hàng Gà",
+        "loai": "phường"
+      },
+      {
+        "ma": "00100",
+        "ten": "Phường Đồng Tâm",
+        "loai": "phường"
+      },
+      {
+        "ma": "00103",
+        "ten": "Phường Hàng Chiếu",
+        "loai": "phường"
+      },
+      {
+        "ma": "00106",
+        "ten": "Phường Đống Mác",
+        "loai": "phường"
+      },
+      {
+        "ma": "00109",
+        "ten": "Phường Thanh Lương",
+        "loai": "phường"
+      },
+      {
+        "ma": "00112",
+        "ten": "Phường Thanh Nhàn",
+        "loai": "phường"
+      },
+      {
+        "ma": "00115",
+        "ten": "Phường Cầu Dền",
+        "loai": "phường"
+      },
+      {
+        "ma": "00118",
+        "ten": "Phường Bách Khoa",
+        "loai": "phường"
+      },
+      {
+        "ma": "00121",
+        "ten": "Phường Đồng Nhân",
+        "loai": "phường"
+      },
+      {
+        "ma": "00124",
+        "ten": "Phường Phố Huế",
+        "loai": "phường"
+      },
+      {
+        "ma": "00127",
+        "ten": "Phường Trương Định",
+        "loai": "phường"
+      },
+      {
+        "ma": "00130",
+        "ten": "Phường Nguyễn Du",
+        "loai": "phường"
+      },
+      {
+        "ma": "00133",
+        "ten": "Phường Bùi Thị Xuân",
+        "loai": "phường"
+      },
+      {
+        "ma": "00136",
+        "ten": "Phường Ngô Thì Nhậm",
+        "loai": "phường"
+      },
+      {
+        "ma": "00139",
+        "ten": "Phường Lê Đại Hành",
+        "loai": "phường"
+      },
+      {
+        "ma": "00142",
+        "ten": "Phường Đại La",
+        "loai": "phường"
+      },
+      {
+        "ma": "00145",
+        "ten": "Phường Trương Định",
+        "loai": "phường"
+      },
+      {
+        "ma": "00148",
+        "ten": "Phường Đồng Tâm",
+        "loai": "phường"
+      },
+      {
+        "ma": "00151",
+        "ten": "Xã Tả Thanh Oai",
+        "loai": "xã"
+      },
+      {
+        "ma": "00154",
+        "ten": "Xã Hữu Hòa",
+        "loai": "xã"
+      },
+      {
+        "ma": "00157",
+        "ten": "Xã Tam Hiệp",
+        "loai": "xã"
+      },
+      {
+        "ma": "00160",
+        "ten": "Xã Tứ Hiệp",
+        "loai": "xã"
+      },
+      {
+        "ma": "00163",
+        "ten": "Xã Yên Mỹ",
+        "loai": "xã"
+      },
+      {
+        "ma": "00166",
+        "ten": "Xã Vĩnh Quỳnh",
+        "loai": "xã"
+      },
+      {
+        "ma": "00169",
+        "ten": "Xã Ngũ Hiệp",
+        "loai": "xã"
+      },
+      {
+        "ma": "00172",
+        "ten": "Xã Duyên Hà",
+        "loai": "xã"
+      },
+      {
+        "ma": "00175",
+        "ten": "Xã Ngọc Hồi",
+        "loai": "xã"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "02",
+    "ten_tinh": "Tỉnh Tuyên Quang",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Tuyên Quang",
+    "phuong_xa": [
+      {
+        "ma": "02001",
+        "ten": "Phường Phan Thiết",
+        "loai": "phường"
+      },
+      {
+        "ma": "02002",
+        "ten": "Phường Minh Xuân",
+        "loai": "phường"
+      },
+      {
+        "ma": "02003",
+        "ten": "Phường Tân Quang",
+        "loai": "phường"
+      },
+      {
+        "ma": "02004",
+        "ten": "Xã Tràng Đà",
+        "loai": "xã"
+      },
+      {
+        "ma": "02005",
+        "ten": "Phường Nông Tiến",
+        "loai": "phường"
+      },
+      {
+        "ma": "02006",
+        "ten": "Phường Ỷ La",
+        "loai": "phường"
+      },
+      {
+        "ma": "02007",
+        "ten": "Phường Tân Hà",
+        "loai": "phường"
+      },
+      {
+        "ma": "02008",
+        "ten": "Phường Hưng Thành",
+        "loai": "phường"
+      },
+      {
+        "ma": "02009",
+        "ten": "Xã Kim Phú",
+        "loai": "xã"
+      },
+      {
+        "ma": "02010",
+        "ten": "Xã An Khang",
+        "loai": "xã"
+      },
+      {
+        "ma": "02011",
+        "ten": "Phường Mỹ Lâm",
+        "loai": "phường"
+      },
+      {
+        "ma": "02012",
+        "ten": "Phường An Tường",
+        "loai": "phường"
+      },
+      {
+        "ma": "02013",
+        "ten": "Xã Lưỡng Vượng",
+        "loai": "xã"
+      },
+      {
+        "ma": "02014",
+        "ten": "Xã Thái Long",
+        "loai": "xã"
+      },
+      {
+        "ma": "02015",
+        "ten": "Phường Đội Cấn",
+        "loai": "phường"
+      },
+      {
+        "ma": "02016",
+        "ten": "Xã Đồng Quý",
+        "loai": "xã"
+      },
+      {
+        "ma": "02017",
+        "ten": "Xã Tân Long",
+        "loai": "xã"
+      },
+      {
+        "ma": "02018",
+        "ten": "Xã Đức Ninh",
+        "loai": "xã"
+      },
+      {
+        "ma": "02019",
+        "ten": "Xã Hợp Hòa",
+        "loai": "xã"
+      },
+      {
+        "ma": "02020",
+        "ten": "Xã Chân Sơn",
+        "loai": "xã"
+      },
+      {
+        "ma": "02021",
+        "ten": "Phường Đồng Xa",
+        "loai": "phường"
+      },
+      {
+        "ma": "02022",
+        "ten": "Xã Yên Nguyên",
+        "loai": "xã"
+      },
+      {
+        "ma": "02023",
+        "ten": "Xã Phúc Thịnh",
+        "loai": "xã"
+      },
+      {
+        "ma": "02024",
+        "ten": "Xã Kiên Đài",
+        "loai": "xã"
+      },
+      {
+        "ma": "02025",
+        "ten": "Xã Tân Thịnh",
+        "loai": "xã"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "03",
+    "ten_tinh": "Tỉnh Lào Cai",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Lào Cai",
+    "phuong_xa": [
+      {
+        "ma": "03001",
+        "ten": "Phường Duyên Hải",
+        "loai": "phường"
+      },
+      {
+        "ma": "03002",
+        "ten": "Phường Lào Cai",
+        "loai": "phường"
+      },
+      {
+        "ma": "03003",
+        "ten": "Phường Phố Mới",
+        "loai": "phường"
+      },
+      {
+        "ma": "03004",
+        "ten": "Phường Cốc Lếu",
+        "loai": "phường"
+      },
+      {
+        "ma": "03005",
+        "ten": "Phường Kim Tân",
+        "loai": "phường"
+      },
+      {
+        "ma": "03006",
+        "ten": "Phường Bắc Lệnh",
+        "loai": "phường"
+      },
+      {
+        "ma": "03007",
+        "ten": "Phường Pom Hán",
+        "loai": "phường"
+      },
+      {
+        "ma": "03008",
+        "ten": "Phường Xuân Tăng",
+        "loai": "phường"
+      },
+      {
+        "ma": "03009",
+        "ten": "Phường Bình Minh",
+        "loai": "phường"
+      },
+      {
+        "ma": "03010",
+        "ten": "Xã Thống Nhất",
+        "loai": "xã"
+      },
+      {
+        "ma": "03011",
+        "ten": "Xã Đồng Tuyển",
+        "loai": "xã"
+      },
+      {
+        "ma": "03012",
+        "ten": "Xã Vạn Hòa",
+        "loai": "xã"
+      },
+      {
+        "ma": "03013",
+        "ten": "Xã Tả Phời",
+        "loai": "xã"
+      },
+      {
+        "ma": "03014",
+        "ten": "Xã Hợp Thành",
+        "loai": "xã"
+      },
+      {
+        "ma": "03015",
+        "ten": "Phường Sa Pa",
+        "loai": "phường"
+      },
+      {
+        "ma": "03016",
+        "ten": "Xã Ô Quý Hồ",
+        "loai": "xã"
+      },
+      {
+        "ma": "03017",
+        "ten": "Xã Sa Pả",
+        "loai": "xã"
+      },
+      {
+        "ma": "03018",
+        "ten": "Xã Tả Van",
+        "loai": "xã"
+      },
+      {
+        "ma": "03019",
+        "ten": "Xã Lao Chải",
+        "loai": "xã"
+      },
+      {
+        "ma": "03020",
+        "ten": "Xã Hầu Thào",
+        "loai": "xã"
+      },
+      {
+        "ma": "03021",
+        "ten": "Phường Yên Bái",
+        "loai": "phường"
+      },
+      {
+        "ma": "03022",
+        "ten": "Phường Nguyễn Thái Học",
+        "loai": "phường"
+      },
+      {
+        "ma": "03023",
+        "ten": "Phường Yên Ninh",
+        "loai": "phường"
+      },
+      {
+        "ma": "03024",
+        "ten": "Phường Minh Tân",
+        "loai": "phường"
+      },
+      {
+        "ma": "03025",
+        "ten": "Phường Nguyễn Phúc",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "04",
+    "ten_tinh": "Tỉnh Thái Nguyên",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Thái Nguyên",
+    "phuong_xa": [
+      {
+        "ma": "04001",
+        "ten": "Phường Quán Triều",
+        "loai": "phường"
+      },
+      {
+        "ma": "04002",
+        "ten": "Phường Quang Vinh",
+        "loai": "phường"
+      },
+      {
+        "ma": "04003",
+        "ten": "Phường Túc Duyên",
+        "loai": "phường"
+      },
+      {
+        "ma": "04004",
+        "ten": "Phường Hoàng Văn Thụ",
+        "loai": "phường"
+      },
+      {
+        "ma": "04005",
+        "ten": "Phường Trung Thành",
+        "loai": "phường"
+      },
+      {
+        "ma": "04006",
+        "ten": "Phường Tân Thịnh",
+        "loai": "phường"
+      },
+      {
+        "ma": "04007",
+        "ten": "Phường Thịnh Đán",
+        "loai": "phường"
+      },
+      {
+        "ma": "04008",
+        "ten": "Phường Đồng Quang",
+        "loai": "phường"
+      },
+      {
+        "ma": "04009",
+        "ten": "Phường Gia Sàng",
+        "loai": "phường"
+      },
+      {
+        "ma": "04010",
+        "ten": "Phường Tân Lập",
+        "loai": "phường"
+      },
+      {
+        "ma": "04011",
+        "ten": "Phường Cam Giá",
+        "loai": "phường"
+      },
+      {
+        "ma": "04012",
+        "ten": "Phường Phú Xá",
+        "loai": "phường"
+      },
+      {
+        "ma": "04013",
+        "ten": "Phường Hương Sơn",
+        "loai": "phường"
+      },
+      {
+        "ma": "04014",
+        "ten": "Phường Trung Thành",
+        "loai": "phường"
+      },
+      {
+        "ma": "04015",
+        "ten": "Xã Tân Cương",
+        "loai": "xã"
+      },
+      {
+        "ma": "04016",
+        "ten": "Xã Phúc Hà",
+        "loai": "xã"
+      },
+      {
+        "ma": "04017",
+        "ten": "Xã Phúc Xuân",
+        "loai": "xã"
+      },
+      {
+        "ma": "04018",
+        "ten": "Xã Quyết Thắng",
+        "loai": "xã"
+      },
+      {
+        "ma": "04019",
+        "ten": "Xã Phúc Trìu",
+        "loai": "xã"
+      },
+      {
+        "ma": "04020",
+        "ten": "Xã Thịnh Đức",
+        "loai": "xã"
+      },
+      {
+        "ma": "04021",
+        "ten": "Phường Bắc Kạn",
+        "loai": "phường"
+      },
+      {
+        "ma": "04022",
+        "ten": "Phường Sông Cầu",
+        "loai": "phường"
+      },
+      {
+        "ma": "04023",
+        "ten": "Phường Đức Xuân",
+        "loai": "phường"
+      },
+      {
+        "ma": "04024",
+        "ten": "Phường Phùng Chí Kiên",
+        "loai": "phường"
+      },
+      {
+        "ma": "04025",
+        "ten": "Xã Huyền Tụng",
+        "loai": "xã"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "05",
+    "ten_tinh": "Tỉnh Cao Bằng",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Cao Bằng",
+    "phuong_xa": [
+      {
+        "ma": "05001",
+        "ten": "Phường Sông Bằng",
+        "loai": "phường"
+      },
+      {
+        "ma": "05002",
+        "ten": "Phường Hợp Giang",
+        "loai": "phường"
+      },
+      {
+        "ma": "05003",
+        "ten": "Phường Tân Giang",
+        "loai": "phường"
+      },
+      {
+        "ma": "05004",
+        "ten": "Phường Ngọc Xuân",
+        "loai": "phường"
+      },
+      {
+        "ma": "05005",
+        "ten": "Phường Đề Thám",
+        "loai": "phường"
+      },
+      {
+        "ma": "05006",
+        "ten": "Phường Hoà Chung",
+        "loai": "phường"
+      },
+      {
+        "ma": "05007",
+        "ten": "Phường Duyệt Trung",
+        "loai": "phường"
+      },
+      {
+        "ma": "05008",
+        "ten": "Xã Vĩnh Quang",
+        "loai": "xã"
+      },
+      {
+        "ma": "05009",
+        "ten": "Xã Hưng Đạo",
+        "loai": "xã"
+      },
+      {
+        "ma": "05010",
+        "ten": "Xã Chu Trinh",
+        "loai": "xã"
+      },
+      {
+        "ma": "05011",
+        "ten": "Xã Bình Long",
+        "loai": "xã"
+      },
+      {
+        "ma": "05012",
+        "ten": "Xã Ngũ Lão",
+        "loai": "xã"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "06",
+    "ten_tinh": "Tỉnh Lạng Sơn",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Lạng Sơn",
+    "phuong_xa": [
+      {
+        "ma": "06001",
+        "ten": "Phường Hoàng Văn Thụ",
+        "loai": "phường"
+      },
+      {
+        "ma": "06002",
+        "ten": "Phường Tam Thanh",
+        "loai": "phường"
+      },
+      {
+        "ma": "06003",
+        "ten": "Phường Vĩnh Trại",
+        "loai": "phường"
+      },
+      {
+        "ma": "06004",
+        "ten": "Phường Đông Kinh",
+        "loai": "phường"
+      },
+      {
+        "ma": "06005",
+        "ten": "Phường Chi Lăng",
+        "loai": "phường"
+      },
+      {
+        "ma": "06006",
+        "ten": "Xã Hoàng Đồng",
+        "loai": "xã"
+      },
+      {
+        "ma": "06007",
+        "ten": "Xã Quảng Lạc",
+        "loai": "xã"
+      },
+      {
+        "ma": "06008",
+        "ten": "Xã Mai Pha",
+        "loai": "xã"
+      },
+      {
+        "ma": "06009",
+        "ten": "Xã Yên Trạch",
+        "loai": "xã"
+      },
+      {
+        "ma": "06010",
+        "ten": "Thị trấn Đồng Đăng",
+        "loai": "thị trấn"
+      },
+      {
+        "ma": "06011",
+        "ten": "Xã Tân Thanh",
+        "loai": "xã"
+      },
+      {
+        "ma": "06012",
+        "ten": "Xã Tân Mỹ",
+        "loai": "xã"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "07",
+    "ten_tinh": "Tỉnh Quảng Ninh",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Hạ Long",
+    "phuong_xa": [
+      {
+        "ma": "07001",
+        "ten": "Phường Hà Khánh",
+        "loai": "phường"
+      },
+      {
+        "ma": "07002",
+        "ten": "Phường Hà Phong",
+        "loai": "phường"
+      },
+      {
+        "ma": "07003",
+        "ten": "Phường Hà Trung",
+        "loai": "phường"
+      },
+      {
+        "ma": "07004",
+        "ten": "Phường Hà Tu",
+        "loai": "phường"
+      },
+      {
+        "ma": "07005",
+        "ten": "Phường Hà Thanh",
+        "loai": "phường"
+      },
+      {
+        "ma": "07006",
+        "ten": "Phường Hà Lầm",
+        "loai": "phường"
+      },
+      {
+        "ma": "07007",
+        "ten": "Phường Bãi Cháy",
+        "loai": "phường"
+      },
+      {
+        "ma": "07008",
+        "ten": "Phường Cao Xanh",
+        "loai": "phường"
+      },
+      {
+        "ma": "07009",
+        "ten": "Phường Giếng Đáy",
+        "loai": "phường"
+      },
+      {
+        "ma": "07010",
+        "ten": "Phường Hà Tu",
+        "loai": "phường"
+      },
+      {
+        "ma": "07011",
+        "ten": "Phường Trần Hưng Đạo",
+        "loai": "phường"
+      },
+      {
+        "ma": "07012",
+        "ten": "Phường Hồng Hải",
+        "loai": "phường"
+      },
+      {
+        "ma": "07013",
+        "ten": "Phường Hồng Gai",
+        "loai": "phường"
+      },
+      {
+        "ma": "07014",
+        "ten": "Phường Bạch Đằng",
+        "loai": "phường"
+      },
+      {
+        "ma": "07015",
+        "ten": "Phường Hồng Hà",
+        "loai": "phường"
+      },
+      {
+        "ma": "07016",
+        "ten": "Phường Yết Kiêu",
+        "loai": "phường"
+      },
+      {
+        "ma": "07017",
+        "ten": "Phường Trần Phú",
+        "loai": "phường"
+      },
+      {
+        "ma": "07018",
+        "ten": "Phường Cẩm Phả",
+        "loai": "phường"
+      },
+      {
+        "ma": "07019",
+        "ten": "Phường Cẩm Đông",
+        "loai": "phường"
+      },
+      {
+        "ma": "07020",
+        "ten": "Phường Móng Cái",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "08",
+    "ten_tinh": "Tỉnh Phú Thọ",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Việt Trì",
+    "phuong_xa": [
+      {
+        "ma": "08001",
+        "ten": "Phường Dữu Lâu",
+        "loai": "phường"
+      },
+      {
+        "ma": "08002",
+        "ten": "Phường Vân Cơ",
+        "loai": "phường"
+      },
+      {
+        "ma": "08003",
+        "ten": "Phường Nông Trang",
+        "loai": "phường"
+      },
+      {
+        "ma": "08004",
+        "ten": "Phường Tân Dân",
+        "loai": "phường"
+      },
+      {
+        "ma": "08005",
+        "ten": "Phường Gia Cẩm",
+        "loai": "phường"
+      },
+      {
+        "ma": "08006",
+        "ten": "Phường Tiên Cát",
+        "loai": "phường"
+      },
+      {
+        "ma": "08007",
+        "ten": "Phường Thọ Sơn",
+        "loai": "phường"
+      },
+      {
+        "ma": "08008",
+        "ten": "Phường Thanh Miếu",
+        "loai": "phường"
+      },
+      {
+        "ma": "08009",
+        "ten": "Phường Bạch Hạc",
+        "loai": "phường"
+      },
+      {
+        "ma": "08010",
+        "ten": "Phường Bến Gót",
+        "loai": "phường"
+      },
+      {
+        "ma": "08011",
+        "ten": "Phường Vân Phú",
+        "loai": "phường"
+      },
+      {
+        "ma": "08012",
+        "ten": "Xã Phượng Lâu",
+        "loai": "xã"
+      },
+      {
+        "ma": "08013",
+        "ten": "Xã Thụy Vân",
+        "loai": "xã"
+      },
+      {
+        "ma": "08014",
+        "ten": "Xã Minh Phương",
+        "loai": "xã"
+      },
+      {
+        "ma": "08015",
+        "ten": "Xã Trưng Vương",
+        "loai": "xã"
+      },
+      {
+        "ma": "08016",
+        "ten": "Phường Vĩnh Yên",
+        "loai": "phường"
+      },
+      {
+        "ma": "08017",
+        "ten": "Phường Liên Bảo",
+        "loai": "phường"
+      },
+      {
+        "ma": "08018",
+        "ten": "Phường Hội Hợp",
+        "loai": "phường"
+      },
+      {
+        "ma": "08019",
+        "ten": "Phường Đống Đa",
+        "loai": "phường"
+      },
+      {
+        "ma": "08020",
+        "ten": "Phường Ngô Quyền",
+        "loai": "phường"
+      },
+      {
+        "ma": "08021",
+        "ten": "Phường Hòa Bình",
+        "loai": "phường"
+      },
+      {
+        "ma": "08022",
+        "ten": "Phường Tân Thịnh",
+        "loai": "phường"
+      },
+      {
+        "ma": "08023",
+        "ten": "Phường Thái Bình",
+        "loai": "phường"
+      },
+      {
+        "ma": "08024",
+        "ten": "Phường Phương Lâm",
+        "loai": "phường"
+      },
+      {
+        "ma": "08025",
+        "ten": "Xã Yên Mông",
+        "loai": "xã"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "09",
+    "ten_tinh": "Tỉnh Bắc Ninh",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Bắc Ninh",
+    "phuong_xa": [
+      {
+        "ma": "09001",
+        "ten": "Phường Vũ Ninh",
+        "loai": "phường"
+      },
+      {
+        "ma": "09002",
+        "ten": "Phường Đáp Cầu",
+        "loai": "phường"
+      },
+      {
+        "ma": "09003",
+        "ten": "Phường Thị Cầu",
+        "loai": "phường"
+      },
+      {
+        "ma": "09004",
+        "ten": "Phường Kinh Bắc",
+        "loai": "phường"
+      },
+      {
+        "ma": "09005",
+        "ten": "Phường Vệ An",
+        "loai": "phường"
+      },
+      {
+        "ma": "09006",
+        "ten": "Phường Tiền An",
+        "loai": "phường"
+      },
+      {
+        "ma": "09007",
+        "ten": "Phường Đại Phúc",
+        "loai": "phường"
+      },
+      {
+        "ma": "09008",
+        "ten": "Phường Ninh Xá",
+        "loai": "phường"
+      },
+      {
+        "ma": "09009",
+        "ten": "Phường Suối Hoa",
+        "loai": "phường"
+      },
+      {
+        "ma": "09010",
+        "ten": "Phường Võ Cường",
+        "loai": "phường"
+      },
+      {
+        "ma": "09011",
+        "ten": "Xã Hòa Long",
+        "loai": "xã"
+      },
+      {
+        "ma": "09012",
+        "ten": "Xã Vạn An",
+        "loai": "xã"
+      },
+      {
+        "ma": "09013",
+        "ten": "Xã Khúc Xuyên",
+        "loai": "xã"
+      },
+      {
+        "ma": "09014",
+        "ten": "Phường Bắc Giang",
+        "loai": "phường"
+      },
+      {
+        "ma": "09015",
+        "ten": "Phường Ngô Quyền",
+        "loai": "phường"
+      },
+      {
+        "ma": "09016",
+        "ten": "Phường Hoàng Văn Thụ",
+        "loai": "phường"
+      },
+      {
+        "ma": "09017",
+        "ten": "Phường Trần Phú",
+        "loai": "phường"
+      },
+      {
+        "ma": "09018",
+        "ten": "Phường Mỹ Độ",
+        "loai": "phường"
+      },
+      {
+        "ma": "09019",
+        "ten": "Phường Lê Lợi",
+        "loai": "phường"
+      },
+      {
+        "ma": "09020",
+        "ten": "Xã Song Mai",
+        "loai": "xã"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "10",
+    "ten_tinh": "Tỉnh Hưng Yên",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Hưng Yên",
+    "phuong_xa": [
+      {
+        "ma": "10001",
+        "ten": "Phường Lam Sơn",
+        "loai": "phường"
+      },
+      {
+        "ma": "10002",
+        "ten": "Phường Hiến Nam",
+        "loai": "phường"
+      },
+      {
+        "ma": "10003",
+        "ten": "Phường An Tảo",
+        "loai": "phường"
+      },
+      {
+        "ma": "10004",
+        "ten": "Phường Lê Lợi",
+        "loai": "phường"
+      },
+      {
+        "ma": "10005",
+        "ten": "Phường Minh Khai",
+        "loai": "phường"
+      },
+      {
+        "ma": "10006",
+        "ten": "Phường Quang Trung",
+        "loai": "phường"
+      },
+      {
+        "ma": "10007",
+        "ten": "Phường Hồng Châu",
+        "loai": "phường"
+      },
+      {
+        "ma": "10008",
+        "ten": "Xã Trung Nghĩa",
+        "loai": "xã"
+      },
+      {
+        "ma": "10009",
+        "ten": "Xã Liên Phương",
+        "loai": "xã"
+      },
+      {
+        "ma": "10010",
+        "ten": "Phường Thái Bình",
+        "loai": "phường"
+      },
+      {
+        "ma": "10011",
+        "ten": "Phường Trần Hưng Đạo",
+        "loai": "phường"
+      },
+      {
+        "ma": "10012",
+        "ten": "Phường Bồ Xuyên",
+        "loai": "phường"
+      },
+      {
+        "ma": "10013",
+        "ten": "Phường Đề Thám",
+        "loai": "phường"
+      },
+      {
+        "ma": "10014",
+        "ten": "Phường Kỳ Bá",
+        "loai": "phường"
+      },
+      {
+        "ma": "10015",
+        "ten": "Phường Quang Trung",
+        "loai": "phường"
+      },
+      {
+        "ma": "10016",
+        "ten": "Phường Phú Khánh",
+        "loai": "phường"
+      },
+      {
+        "ma": "10017",
+        "ten": "Phường Tiền Phong",
+        "loai": "phường"
+      },
+      {
+        "ma": "10018",
+        "ten": "Phường Trần Lãm",
+        "loai": "phường"
+      },
+      {
+        "ma": "10019",
+        "ten": "Xã Đông Hòa",
+        "loai": "xã"
+      },
+      {
+        "ma": "10020",
+        "ten": "Xã Hoàng Diệu",
+        "loai": "xã"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "11",
+    "ten_tinh": "Thành phố Hải Phòng",
+    "loai": "Thành phố trực thuộc Trung ương",
+    "tinh_ly": "Hải Phòng",
+    "phuong_xa": [
+      {
+        "ma": "11001",
+        "ten": "Phường Máy Chai",
+        "loai": "phường"
+      },
+      {
+        "ma": "11002",
+        "ten": "Phường Máy Tơ",
+        "loai": "phường"
+      },
+      {
+        "ma": "11003",
+        "ten": "Phường Vạn Mỹ",
+        "loai": "phường"
+      },
+      {
+        "ma": "11004",
+        "ten": "Phường Cầu Tre",
+        "loai": "phường"
+      },
+      {
+        "ma": "11005",
+        "ten": "Phường Lạch Tray",
+        "loai": "phường"
+      },
+      {
+        "ma": "11006",
+        "ten": "Phường Đông Khê",
+        "loai": "phường"
+      },
+      {
+        "ma": "11007",
+        "ten": "Phường Cầu Đất",
+        "loai": "phường"
+      },
+      {
+        "ma": "11008",
+        "ten": "Phường Hoa Phượng",
+        "loai": "phường"
+      },
+      {
+        "ma": "11009",
+        "ten": "Phường Viện Phố",
+        "loai": "phường"
+      },
+      {
+        "ma": "11010",
+        "ten": "Phường Trại Chuối",
+        "loai": "phường"
+      },
+      {
+        "ma": "11011",
+        "ten": "Phường Hải Dương",
+        "loai": "phường"
+      },
+      {
+        "ma": "11012",
+        "ten": "Phường Trần Phú",
+        "loai": "phường"
+      },
+      {
+        "ma": "11013",
+        "ten": "Phường Phạm Ngũ Lão",
+        "loai": "phường"
+      },
+      {
+        "ma": "11014",
+        "ten": "Phường Đồng Quốc Bình",
+        "loai": "phường"
+      },
+      {
+        "ma": "11015",
+        "ten": "Phường Minh Khai",
+        "loai": "phường"
+      },
+      {
+        "ma": "11016",
+        "ten": "Phường Quán Toan",
+        "loai": "phường"
+      },
+      {
+        "ma": "11017",
+        "ten": "Phường Hùng Vương",
+        "loai": "phường"
+      },
+      {
+        "ma": "11018",
+        "ten": "Phường Sở Dầu",
+        "loai": "phường"
+      },
+      {
+        "ma": "11019",
+        "ten": "Phường Thượng Lý",
+        "loai": "phường"
+      },
+      {
+        "ma": "11020",
+        "ten": "Phường Hải Dương",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "12",
+    "ten_tinh": "Tỉnh Ninh Bình",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Ninh Bình",
+    "phuong_xa": [
+      {
+        "ma": "12001",
+        "ten": "Phường Đông Thành",
+        "loai": "phường"
+      },
+      {
+        "ma": "12002",
+        "ten": "Phường Tân Thành",
+        "loai": "phường"
+      },
+      {
+        "ma": "12003",
+        "ten": "Phường Thanh Bình",
+        "loai": "phường"
+      },
+      {
+        "ma": "12004",
+        "ten": "Phường Vân Giang",
+        "loai": "phường"
+      },
+      {
+        "ma": "12005",
+        "ten": "Phường Bích Đào",
+        "loai": "phường"
+      },
+      {
+        "ma": "12006",
+        "ten": "Phường Phúc Thành",
+        "loai": "phường"
+      },
+      {
+        "ma": "12007",
+        "ten": "Phường Nam Bình",
+        "loai": "phường"
+      },
+      {
+        "ma": "12008",
+        "ten": "Phường Nam Thành",
+        "loai": "phường"
+      },
+      {
+        "ma": "12009",
+        "ten": "Phường Ninh Khánh",
+        "loai": "phường"
+      },
+      {
+        "ma": "12010",
+        "ten": "Xã Ninh Nhất",
+        "loai": "xã"
+      },
+      {
+        "ma": "12011",
+        "ten": "Xã Ninh Tiến",
+        "loai": "xã"
+      },
+      {
+        "ma": "12012",
+        "ten": "Phường Nam Định",
+        "loai": "phường"
+      },
+      {
+        "ma": "12013",
+        "ten": "Phường Vị Hoàng",
+        "loai": "phường"
+      },
+      {
+        "ma": "12014",
+        "ten": "Phường Vị Xuyên",
+        "loai": "phường"
+      },
+      {
+        "ma": "12015",
+        "ten": "Phường Quang Trung",
+        "loai": "phường"
+      },
+      {
+        "ma": "12016",
+        "ten": "Phường Cửa Bắc",
+        "loai": "phường"
+      },
+      {
+        "ma": "12017",
+        "ten": "Phường Nguyễn Du",
+        "loai": "phường"
+      },
+      {
+        "ma": "12018",
+        "ten": "Phường Bà Triệu",
+        "loai": "phường"
+      },
+      {
+        "ma": "12019",
+        "ten": "Phường Trần Hưng Đạo",
+        "loai": "phường"
+      },
+      {
+        "ma": "12020",
+        "ten": "Phường Phủ Lý",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "13",
+    "ten_tinh": "Tỉnh Thanh Hóa",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Thanh Hóa",
+    "phuong_xa": [
+      {
+        "ma": "13001",
+        "ten": "Phường Hàm Rồng",
+        "loai": "phường"
+      },
+      {
+        "ma": "13002",
+        "ten": "Phường Đông Thọ",
+        "loai": "phường"
+      },
+      {
+        "ma": "13003",
+        "ten": "Phường Nam Ngạn",
+        "loai": "phường"
+      },
+      {
+        "ma": "13004",
+        "ten": "Phường Trường Thi",
+        "loai": "phường"
+      },
+      {
+        "ma": "13005",
+        "ten": "Phường Điện Biên",
+        "loai": "phường"
+      },
+      {
+        "ma": "13006",
+        "ten": "Phường Phú Sơn",
+        "loai": "phường"
+      },
+      {
+        "ma": "13007",
+        "ten": "Phường Lam Sơn",
+        "loai": "phường"
+      },
+      {
+        "ma": "13008",
+        "ten": "Phường Ba Đình",
+        "loai": "phường"
+      },
+      {
+        "ma": "13009",
+        "ten": "Phường Ngọc Trạo",
+        "loai": "phường"
+      },
+      {
+        "ma": "13010",
+        "ten": "Phường Đông Vệ",
+        "loai": "phường"
+      },
+      {
+        "ma": "13011",
+        "ten": "Phường Đông Sơn",
+        "loai": "phường"
+      },
+      {
+        "ma": "13012",
+        "ten": "Phường Tào Xuyên",
+        "loai": "phường"
+      },
+      {
+        "ma": "13013",
+        "ten": "Phường Long Anh",
+        "loai": "phường"
+      },
+      {
+        "ma": "13014",
+        "ten": "Xã Hoằng Anh",
+        "loai": "xã"
+      },
+      {
+        "ma": "13015",
+        "ten": "Xã Hoằng Long",
+        "loai": "xã"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "14",
+    "ten_tinh": "Tỉnh Nghệ An",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Vinh",
+    "phuong_xa": [
+      {
+        "ma": "14001",
+        "ten": "Phường Đông Vĩnh",
+        "loai": "phường"
+      },
+      {
+        "ma": "14002",
+        "ten": "Phường Hà Huy Tập",
+        "loai": "phường"
+      },
+      {
+        "ma": "14003",
+        "ten": "Phường Lê Lợi",
+        "loai": "phường"
+      },
+      {
+        "ma": "14004",
+        "ten": "Phường Quang Trung",
+        "loai": "phường"
+      },
+      {
+        "ma": "14005",
+        "ten": "Phường Đội Cung",
+        "loai": "phường"
+      },
+      {
+        "ma": "14006",
+        "ten": "Phường Lê Mao",
+        "loai": "phường"
+      },
+      {
+        "ma": "14007",
+        "ten": "Phường Trường Thi",
+        "loai": "phường"
+      },
+      {
+        "ma": "14008",
+        "ten": "Phường Bến Thủy",
+        "loai": "phường"
+      },
+      {
+        "ma": "14009",
+        "ten": "Phường Hồng Sơn",
+        "loai": "phường"
+      },
+      {
+        "ma": "14010",
+        "ten": "Phường Trung Đô",
+        "loai": "phường"
+      },
+      {
+        "ma": "14011",
+        "ten": "Phường Cửa Nam",
+        "loai": "phường"
+      },
+      {
+        "ma": "14012",
+        "ten": "Phường Quán Bàu",
+        "loai": "phường"
+      },
+      {
+        "ma": "14013",
+        "ten": "Phường Hưng Bình",
+        "loai": "phường"
+      },
+      {
+        "ma": "14014",
+        "ten": "Phường Hưng Phúc",
+        "loai": "phường"
+      },
+      {
+        "ma": "14015",
+        "ten": "Xã Hưng Hòa",
+        "loai": "xã"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "15",
+    "ten_tinh": "Tỉnh Hà Tĩnh",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Hà Tĩnh",
+    "phuong_xa": [
+      {
+        "ma": "15001",
+        "ten": "Phường Trần Phú",
+        "loai": "phường"
+      },
+      {
+        "ma": "15002",
+        "ten": "Phường Nam Hà",
+        "loai": "phường"
+      },
+      {
+        "ma": "15003",
+        "ten": "Phường Bắc Hà",
+        "loai": "phường"
+      },
+      {
+        "ma": "15004",
+        "ten": "Phường Nguyễn Du",
+        "loai": "phường"
+      },
+      {
+        "ma": "15005",
+        "ten": "Phường Tân Giang",
+        "loai": "phường"
+      },
+      {
+        "ma": "15006",
+        "ten": "Phường Đại Nài",
+        "loai": "phường"
+      },
+      {
+        "ma": "15007",
+        "ten": "Phường Hà Huy Tập",
+        "loai": "phường"
+      },
+      {
+        "ma": "15008",
+        "ten": "Xã Thạch Môn",
+        "loai": "xã"
+      },
+      {
+        "ma": "15009",
+        "ten": "Xã Thạch Hạ",
+        "loai": "xã"
+      },
+      {
+        "ma": "15010",
+        "ten": "Xã Đồng Môn",
+        "loai": "xã"
+      },
+      {
+        "ma": "15011",
+        "ten": "Xã Thạch Hưng",
+        "loai": "xã"
+      },
+      {
+        "ma": "15012",
+        "ten": "Xã Thạch Bình",
+        "loai": "xã"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "16",
+    "ten_tinh": "Tỉnh Quảng Trị",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Đồng Hới",
+    "phuong_xa": [
+      {
+        "ma": "16001",
+        "ten": "Phường Hải Thành",
+        "loai": "phường"
+      },
+      {
+        "ma": "16002",
+        "ten": "Phường Đồng Phú",
+        "loai": "phường"
+      },
+      {
+        "ma": "16003",
+        "ten": "Phường Bắc Lý",
+        "loai": "phường"
+      },
+      {
+        "ma": "16004",
+        "ten": "Phường Nam Lý",
+        "loai": "phường"
+      },
+      {
+        "ma": "16005",
+        "ten": "Phường Đồng Hải",
+        "loai": "phường"
+      },
+      {
+        "ma": "16006",
+        "ten": "Phường Đồng Sơn",
+        "loai": "phường"
+      },
+      {
+        "ma": "16007",
+        "ten": "Phường Phú Hải",
+        "loai": "phường"
+      },
+      {
+        "ma": "16008",
+        "ten": "Phường Bắc Nghĩa",
+        "loai": "phường"
+      },
+      {
+        "ma": "16009",
+        "ten": "Phường Đức Ninh Đông",
+        "loai": "phường"
+      },
+      {
+        "ma": "16010",
+        "ten": "Xã Quang Phú",
+        "loai": "xã"
+      },
+      {
+        "ma": "16011",
+        "ten": "Xã Lộc Ninh",
+        "loai": "xã"
+      },
+      {
+        "ma": "16012",
+        "ten": "Phường Đông Giang",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "17",
+    "ten_tinh": "Thành phố Huế",
+    "loai": "Thành phố trực thuộc Trung ương",
+    "tinh_ly": "Huế",
+    "phuong_xa": [
+      {
+        "ma": "17001",
+        "ten": "Phường Phú Thuận",
+        "loai": "phường"
+      },
+      {
+        "ma": "17002",
+        "ten": "Phường Phú Bình",
+        "loai": "phường"
+      },
+      {
+        "ma": "17003",
+        "ten": "Phường Tây Lộc",
+        "loai": "phường"
+      },
+      {
+        "ma": "17004",
+        "ten": "Phường Thuận Lộc",
+        "loai": "phường"
+      },
+      {
+        "ma": "17005",
+        "ten": "Phường Phú Hiệp",
+        "loai": "phường"
+      },
+      {
+        "ma": "17006",
+        "ten": "Phường Phú Hậu",
+        "loai": "phường"
+      },
+      {
+        "ma": "17007",
+        "ten": "Phường Thuận Hòa",
+        "loai": "phường"
+      },
+      {
+        "ma": "17008",
+        "ten": "Phường Thuận Thành",
+        "loai": "phường"
+      },
+      {
+        "ma": "17009",
+        "ten": "Phường Phú Hòa",
+        "loai": "phường"
+      },
+      {
+        "ma": "17010",
+        "ten": "Phường Phú Cát",
+        "loai": "phường"
+      },
+      {
+        "ma": "17011",
+        "ten": "Phường Kim Long",
+        "loai": "phường"
+      },
+      {
+        "ma": "17012",
+        "ten": "Phường Vĩ Dạ",
+        "loai": "phường"
+      },
+      {
+        "ma": "17013",
+        "ten": "Phường Phường Đúc",
+        "loai": "phường"
+      },
+      {
+        "ma": "17014",
+        "ten": "Phường Vĩnh Ninh",
+        "loai": "phường"
+      },
+      {
+        "ma": "17015",
+        "ten": "Phường Phú Hội",
+        "loai": "phường"
+      },
+      {
+        "ma": "17016",
+        "ten": "Phường Phú Nhuận",
+        "loai": "phường"
+      },
+      {
+        "ma": "17017",
+        "ten": "Phường Xuân Phú",
+        "loai": "phường"
+      },
+      {
+        "ma": "17018",
+        "ten": "Phường Trường An",
+        "loai": "phường"
+      },
+      {
+        "ma": "17019",
+        "ten": "Phường Phước Vĩnh",
+        "loai": "phường"
+      },
+      {
+        "ma": "17020",
+        "ten": "Phường An Cựu",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "18",
+    "ten_tinh": "Thành phố Đà Nẵng",
+    "loai": "Thành phố trực thuộc Trung ương",
+    "tinh_ly": "Đà Nẵng",
+    "phuong_xa": [
+      {
+        "ma": "18001",
+        "ten": "Phường Thạch Thang",
+        "loai": "phường"
+      },
+      {
+        "ma": "18002",
+        "ten": "Phường Hải Châu  I",
+        "loai": "phường"
+      },
+      {
+        "ma": "18003",
+        "ten": "Phường Hải Châu II",
+        "loai": "phường"
+      },
+      {
+        "ma": "18004",
+        "ten": "Phường Phước Ninh",
+        "loai": "phường"
+      },
+      {
+        "ma": "18005",
+        "ten": "Phường Hòa Thuận Tây",
+        "loai": "phường"
+      },
+      {
+        "ma": "18006",
+        "ten": "Phường Hòa Thuận Đông",
+        "loai": "phường"
+      },
+      {
+        "ma": "18007",
+        "ten": "Phường Nam Dương",
+        "loai": "phường"
+      },
+      {
+        "ma": "18008",
+        "ten": "Phường Bình Hiên",
+        "loai": "phường"
+      },
+      {
+        "ma": "18009",
+        "ten": "Phường Bình Thuận",
+        "loai": "phường"
+      },
+      {
+        "ma": "18010",
+        "ten": "Phường Hòa Cường Bắc",
+        "loai": "phường"
+      },
+      {
+        "ma": "18011",
+        "ten": "Phường Hòa Cường Nam",
+        "loai": "phường"
+      },
+      {
+        "ma": "18012",
+        "ten": "Phường Thanh Bình",
+        "loai": "phường"
+      },
+      {
+        "ma": "18013",
+        "ten": "Phường Thuận Phước",
+        "loai": "phường"
+      },
+      {
+        "ma": "18014",
+        "ten": "Phường Thọ Quang",
+        "loai": "phường"
+      },
+      {
+        "ma": "18015",
+        "ten": "Phường Mỹ An",
+        "loai": "phường"
+      },
+      {
+        "ma": "18016",
+        "ten": "Phường Khuê Mỹ",
+        "loai": "phường"
+      },
+      {
+        "ma": "18017",
+        "ten": "Phường Mỹ Khê",
+        "loai": "phường"
+      },
+      {
+        "ma": "18018",
+        "ten": "Phường Phước Mỹ",
+        "loai": "phường"
+      },
+      {
+        "ma": "18019",
+        "ten": "Phường Hội An",
+        "loai": "phường"
+      },
+      {
+        "ma": "18020",
+        "ten": "Phường Minh An",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "19",
+    "ten_tinh": "Tỉnh Quảng Ngãi",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Quảng Ngãi",
+    "phuong_xa": [
+      {
+        "ma": "19001",
+        "ten": "Phường Lê Hồng Phong",
+        "loai": "phường"
+      },
+      {
+        "ma": "19002",
+        "ten": "Phường Trần Phú",
+        "loai": "phường"
+      },
+      {
+        "ma": "19003",
+        "ten": "Phường Nguyễn Nghiêm",
+        "loai": "phường"
+      },
+      {
+        "ma": "19004",
+        "ten": "Phường Nghĩa Lộ",
+        "loai": "phường"
+      },
+      {
+        "ma": "19005",
+        "ten": "Phường Trần Hưng Đạo",
+        "loai": "phường"
+      },
+      {
+        "ma": "19006",
+        "ten": "Phường Quảng Phú",
+        "loai": "phường"
+      },
+      {
+        "ma": "19007",
+        "ten": "Xã Nghĩa Dũng",
+        "loai": "xã"
+      },
+      {
+        "ma": "19008",
+        "ten": "Xã Nghĩa Dõng",
+        "loai": "xã"
+      },
+      {
+        "ma": "19009",
+        "ten": "Xã Tịnh Ấn Đông",
+        "loai": "xã"
+      },
+      {
+        "ma": "19010",
+        "ten": "Phường Kon Tum",
+        "loai": "phường"
+      },
+      {
+        "ma": "19011",
+        "ten": "Phường Thắng Lợi",
+        "loai": "phường"
+      },
+      {
+        "ma": "19012",
+        "ten": "Phường Ngô Mây",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "20",
+    "ten_tinh": "Tỉnh Gia Lai",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Pleiku",
+    "phuong_xa": [
+      {
+        "ma": "20001",
+        "ten": "Phường Yên Đỗ",
+        "loai": "phường"
+      },
+      {
+        "ma": "20002",
+        "ten": "Phường Diên Hồng",
+        "loai": "phường"
+      },
+      {
+        "ma": "20003",
+        "ten": "Phường Ia Kring",
+        "loai": "phường"
+      },
+      {
+        "ma": "20004",
+        "ten": "Phường Hội Thương",
+        "loai": "phường"
+      },
+      {
+        "ma": "20005",
+        "ten": "Phường Hội Phú",
+        "loai": "phường"
+      },
+      {
+        "ma": "20006",
+        "ten": "Phường Phù Đổng",
+        "loai": "phường"
+      },
+      {
+        "ma": "20007",
+        "ten": "Phường Hoa Lư",
+        "loai": "phường"
+      },
+      {
+        "ma": "20008",
+        "ten": "Phường Tây Sơn",
+        "loai": "phường"
+      },
+      {
+        "ma": "20009",
+        "ten": "Phường Thống Nhất",
+        "loai": "phường"
+      },
+      {
+        "ma": "20010",
+        "ten": "Xã Biển Hồ",
+        "loai": "xã"
+      },
+      {
+        "ma": "20011",
+        "ten": "Phường Quy Nhơn",
+        "loai": "phường"
+      },
+      {
+        "ma": "20012",
+        "ten": "Phường Lê Hồng Phong",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "21",
+    "ten_tinh": "Tỉnh Đắk Lắk",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Buôn Ma Thuột",
+    "phuong_xa": [
+      {
+        "ma": "21001",
+        "ten": "Phường Tân Lập",
+        "loai": "phường"
+      },
+      {
+        "ma": "21002",
+        "ten": "Phường Tân Hòa",
+        "loai": "phường"
+      },
+      {
+        "ma": "21003",
+        "ten": "Phường Tân An",
+        "loai": "phường"
+      },
+      {
+        "ma": "21004",
+        "ten": "Phường Thống Nhất",
+        "loai": "phường"
+      },
+      {
+        "ma": "21005",
+        "ten": "Phường Thành Nhất",
+        "loai": "phường"
+      },
+      {
+        "ma": "21006",
+        "ten": "Phường Thắng Lợi",
+        "loai": "phường"
+      },
+      {
+        "ma": "21007",
+        "ten": "Phường Tân Lợi",
+        "loai": "phường"
+      },
+      {
+        "ma": "21008",
+        "ten": "Phường Thành Công",
+        "loai": "phường"
+      },
+      {
+        "ma": "21009",
+        "ten": "Phường Tân Thành",
+        "loai": "phường"
+      },
+      {
+        "ma": "21010",
+        "ten": "Phường Ea Tam",
+        "loai": "phường"
+      },
+      {
+        "ma": "21011",
+        "ten": "Phường Khánh Xuân",
+        "loai": "phường"
+      },
+      {
+        "ma": "21012",
+        "ten": "Phường Tuy Hòa",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "22",
+    "ten_tinh": "Tỉnh Khánh Hòa",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Nha Trang",
+    "phuong_xa": [
+      {
+        "ma": "22001",
+        "ten": "Phường Vĩnh Hòa",
+        "loai": "phường"
+      },
+      {
+        "ma": "22002",
+        "ten": "Phường Vĩnh Hải",
+        "loai": "phường"
+      },
+      {
+        "ma": "22003",
+        "ten": "Phường Vĩnh Phước",
+        "loai": "phường"
+      },
+      {
+        "ma": "22004",
+        "ten": "Phường Ngọc Hiệp",
+        "loai": "phường"
+      },
+      {
+        "ma": "22005",
+        "ten": "Phường Vĩnh Thọ",
+        "loai": "phường"
+      },
+      {
+        "ma": "22006",
+        "ten": "Phường Xương Huân",
+        "loai": "phường"
+      },
+      {
+        "ma": "22007",
+        "ten": "Phường Vạn Thắng",
+        "loai": "phường"
+      },
+      {
+        "ma": "22008",
+        "ten": "Phường Vạn Thạnh",
+        "loai": "phường"
+      },
+      {
+        "ma": "22009",
+        "ten": "Phường Phương Sài",
+        "loai": "phường"
+      },
+      {
+        "ma": "22010",
+        "ten": "Phường Phương Sơn",
+        "loai": "phường"
+      },
+      {
+        "ma": "22011",
+        "ten": "Phường Phước Hải",
+        "loai": "phường"
+      },
+      {
+        "ma": "22012",
+        "ten": "Phường Phan Rang",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "23",
+    "ten_tinh": "Tỉnh Lâm Đồng",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Đà Lạt",
+    "phuong_xa": [
+      {
+        "ma": "23001",
+        "ten": "Phường 1",
+        "loai": "phường"
+      },
+      {
+        "ma": "23002",
+        "ten": "Phường 2",
+        "loai": "phường"
+      },
+      {
+        "ma": "23003",
+        "ten": "Phường 3",
+        "loai": "phường"
+      },
+      {
+        "ma": "23004",
+        "ten": "Phường 4",
+        "loai": "phường"
+      },
+      {
+        "ma": "23005",
+        "ten": "Phường 5",
+        "loai": "phường"
+      },
+      {
+        "ma": "23006",
+        "ten": "Phường 6",
+        "loai": "phường"
+      },
+      {
+        "ma": "23007",
+        "ten": "Phường 7",
+        "loai": "phường"
+      },
+      {
+        "ma": "23008",
+        "ten": "Phường 8",
+        "loai": "phường"
+      },
+      {
+        "ma": "23009",
+        "ten": "Phường 9",
+        "loai": "phường"
+      },
+      {
+        "ma": "23010",
+        "ten": "Phường 10",
+        "loai": "phường"
+      },
+      {
+        "ma": "23011",
+        "ten": "Phường 11",
+        "loai": "phường"
+      },
+      {
+        "ma": "23012",
+        "ten": "Phường 12",
+        "loai": "phường"
+      },
+      {
+        "ma": "23013",
+        "ten": "Xã Xuân Thọ",
+        "loai": "xã"
+      },
+      {
+        "ma": "23014",
+        "ten": "Xã Xuân Trường",
+        "loai": "xã"
+      },
+      {
+        "ma": "23015",
+        "ten": "Phường Phan Thiết",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "24",
+    "ten_tinh": "Thành phố Hồ Chí Minh",
+    "loai": "Thành phố trực thuộc Trung ương",
+    "tinh_ly": "Hồ Chí Minh",
+    "phuong_xa": [
+      {
+        "ma": "24001",
+        "ten": "Phường Bến Nghé",
+        "loai": "phường"
+      },
+      {
+        "ma": "24002",
+        "ten": "Phường Bến Thành",
+        "loai": "phường"
+      },
+      {
+        "ma": "24003",
+        "ten": "Phường Nguyễn Thái Bình",
+        "loai": "phường"
+      },
+      {
+        "ma": "24004",
+        "ten": "Phường Phạm Ngũ Lão",
+        "loai": "phường"
+      },
+      {
+        "ma": "24005",
+        "ten": "Phường Cầu Ông Lãnh",
+        "loai": "phường"
+      },
+      {
+        "ma": "24006",
+        "ten": "Phường Cô Giang",
+        "loai": "phường"
+      },
+      {
+        "ma": "24007",
+        "ten": "Phường Nguyễn Cư Trinh",
+        "loai": "phường"
+      },
+      {
+        "ma": "24008",
+        "ten": "Phường Cầu Kho",
+        "loai": "phường"
+      },
+      {
+        "ma": "24009",
+        "ten": "Phường Thạnh Xuân",
+        "loai": "phường"
+      },
+      {
+        "ma": "24010",
+        "ten": "Phường Thạnh Lộc",
+        "loai": "phường"
+      },
+      {
+        "ma": "24011",
+        "ten": "Phường Hiệp Thành",
+        "loai": "phường"
+      },
+      {
+        "ma": "24012",
+        "ten": "Phường Thới An",
+        "loai": "phường"
+      },
+      {
+        "ma": "24013",
+        "ten": "Phường Tân Thới Hiệp",
+        "loai": "phường"
+      },
+      {
+        "ma": "24014",
+        "ten": "Phường Vũng Tàu 1",
+        "loai": "phường"
+      },
+      {
+        "ma": "24015",
+        "ten": "Phường Vũng Tàu 2",
+        "loai": "phường"
+      },
+      {
+        "ma": "24016",
+        "ten": "Phường Thủ Dầu Một",
+        "loai": "phường"
+      },
+      {
+        "ma": "24017",
+        "ten": "Phường Phú Cường",
+        "loai": "phường"
+      },
+      {
+        "ma": "24018",
+        "ten": "Phường Phú Hòa",
+        "loai": "phường"
+      },
+      {
+        "ma": "24019",
+        "ten": "Phường Phú Lợi",
+        "loai": "phường"
+      },
+      {
+        "ma": "24020",
+        "ten": "Phường Phú Mỹ",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "25",
+    "ten_tinh": "Tỉnh Đồng Nai",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Biên Hòa",
+    "phuong_xa": [
+      {
+        "ma": "25001",
+        "ten": "Phường Trảng Dài",
+        "loai": "phường"
+      },
+      {
+        "ma": "25002",
+        "ten": "Phường Tân Phong",
+        "loai": "phường"
+      },
+      {
+        "ma": "25003",
+        "ten": "Phường Tân Biên",
+        "loai": "phường"
+      },
+      {
+        "ma": "25004",
+        "ten": "Phường Hố Nai",
+        "loai": "phường"
+      },
+      {
+        "ma": "25005",
+        "ten": "Phường Tân Hòa",
+        "loai": "phường"
+      },
+      {
+        "ma": "25006",
+        "ten": "Phường Tân Hiệp",
+        "loai": "phường"
+      },
+      {
+        "ma": "25007",
+        "ten": "Phường Bửu Long",
+        "loai": "phường"
+      },
+      {
+        "ma": "25008",
+        "ten": "Phường Tân Tiến",
+        "loai": "phường"
+      },
+      {
+        "ma": "25009",
+        "ten": "Phường Tam Hòa",
+        "loai": "phường"
+      },
+      {
+        "ma": "25010",
+        "ten": "Phường Hòa Bình",
+        "loai": "phường"
+      },
+      {
+        "ma": "25011",
+        "ten": "Phường Quyết Thắng",
+        "loai": "phường"
+      },
+      {
+        "ma": "25012",
+        "ten": "Phường Đồng Tiến",
+        "loai": "phường"
+      },
+      {
+        "ma": "25013",
+        "ten": "Phường Bình Dương",
+        "loai": "phường"
+      },
+      {
+        "ma": "25014",
+        "ten": "Phường Đồng Khởi",
+        "loai": "phường"
+      },
+      {
+        "ma": "25015",
+        "ten": "Phường Tân Mai",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "26",
+    "ten_tinh": "Tỉnh Tây Ninh",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Tây Ninh",
+    "phuong_xa": [
+      {
+        "ma": "26001",
+        "ten": "Phường 1",
+        "loai": "phường"
+      },
+      {
+        "ma": "26002",
+        "ten": "Phường 2",
+        "loai": "phường"
+      },
+      {
+        "ma": "26003",
+        "ten": "Phường 3",
+        "loai": "phường"
+      },
+      {
+        "ma": "26004",
+        "ten": "Phường 4",
+        "loai": "phường"
+      },
+      {
+        "ma": "26005",
+        "ten": "Phường Hiệp Ninh",
+        "loai": "phường"
+      },
+      {
+        "ma": "26006",
+        "ten": "Xã Thạnh Tân",
+        "loai": "xã"
+      },
+      {
+        "ma": "26007",
+        "ten": "Xã Tân Bình",
+        "loai": "xã"
+      },
+      {
+        "ma": "26008",
+        "ten": "Xã Tân Phong",
+        "loai": "xã"
+      },
+      {
+        "ma": "26009",
+        "ten": "Phường Tân Khánh",
+        "loai": "phường"
+      },
+      {
+        "ma": "26010",
+        "ten": "Phường Tân Lập",
+        "loai": "phường"
+      },
+      {
+        "ma": "26011",
+        "ten": "Phường Tân Đông",
+        "loai": "phường"
+      },
+      {
+        "ma": "26012",
+        "ten": "Phường Châu Văn Liêm",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "27",
+    "ten_tinh": "Thành phố Cần Thơ",
+    "loai": "Thành phố trực thuộc Trung ương",
+    "tinh_ly": "Cần Thơ",
+    "phuong_xa": [
+      {
+        "ma": "27001",
+        "ten": "Phường Cái Khế",
+        "loai": "phường"
+      },
+      {
+        "ma": "27002",
+        "ten": "Phường An Hòa",
+        "loai": "phường"
+      },
+      {
+        "ma": "27003",
+        "ten": "Phường Thới Bình",
+        "loai": "phường"
+      },
+      {
+        "ma": "27004",
+        "ten": "Phường An Nghiệp",
+        "loai": "phường"
+      },
+      {
+        "ma": "27005",
+        "ten": "Phường An Phú",
+        "loai": "phường"
+      },
+      {
+        "ma": "27006",
+        "ten": "Phường Xuân Khánh",
+        "loai": "phường"
+      },
+      {
+        "ma": "27007",
+        "ten": "Phường Hưng Lợi",
+        "loai": "phường"
+      },
+      {
+        "ma": "27008",
+        "ten": "Phường An Khánh",
+        "loai": "phường"
+      },
+      {
+        "ma": "27009",
+        "ten": "Phường An Bình",
+        "loai": "phường"
+      },
+      {
+        "ma": "27010",
+        "ten": "Phường Châu Văn Liêm",
+        "loai": "phường"
+      },
+      {
+        "ma": "27011",
+        "ten": "Phường Sóc Trăng",
+        "loai": "phường"
+      },
+      {
+        "ma": "27012",
+        "ten": "Phường Phú Lợi",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "28",
+    "ten_tinh": "Tỉnh Vĩnh Long",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Vĩnh Long",
+    "phuong_xa": [
+      {
+        "ma": "28001",
+        "ten": "Phường 1",
+        "loai": "phường"
+      },
+      {
+        "ma": "28002",
+        "ten": "Phường 2",
+        "loai": "phường"
+      },
+      {
+        "ma": "28003",
+        "ten": "Phường 3",
+        "loai": "phường"
+      },
+      {
+        "ma": "28004",
+        "ten": "Phường 4",
+        "loai": "phường"
+      },
+      {
+        "ma": "28005",
+        "ten": "Phường 5",
+        "loai": "phường"
+      },
+      {
+        "ma": "28006",
+        "ten": "Phường 8",
+        "loai": "phường"
+      },
+      {
+        "ma": "28007",
+        "ten": "Phường 9",
+        "loai": "phường"
+      },
+      {
+        "ma": "28008",
+        "ten": "Xã Trung Hiếu",
+        "loai": "xã"
+      },
+      {
+        "ma": "28009",
+        "ten": "Xã Tân Ngãi",
+        "loai": "xã"
+      },
+      {
+        "ma": "28010",
+        "ten": "Phường Bến Tre",
+        "loai": "phường"
+      },
+      {
+        "ma": "28011",
+        "ten": "Phường Phú Khương",
+        "loai": "phường"
+      },
+      {
+        "ma": "28012",
+        "ten": "Phường Trà Vinh",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "29",
+    "ten_tinh": "Tỉnh Đồng Tháp",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Cao Lãnh",
+    "phuong_xa": [
+      {
+        "ma": "29001",
+        "ten": "Phường 1",
+        "loai": "phường"
+      },
+      {
+        "ma": "29002",
+        "ten": "Phường 2",
+        "loai": "phường"
+      },
+      {
+        "ma": "29003",
+        "ten": "Phường 3",
+        "loai": "phường"
+      },
+      {
+        "ma": "29004",
+        "ten": "Phường 4",
+        "loai": "phường"
+      },
+      {
+        "ma": "29005",
+        "ten": "Phường 6",
+        "loai": "phường"
+      },
+      {
+        "ma": "29006",
+        "ten": "Xã Mỹ Tân",
+        "loai": "xã"
+      },
+      {
+        "ma": "29007",
+        "ten": "Xã Tân Thuận Tây",
+        "loai": "xã"
+      },
+      {
+        "ma": "29008",
+        "ten": "Phường Mỹ Tho",
+        "loai": "phường"
+      },
+      {
+        "ma": "29009",
+        "ten": "Phường 6 Mỹ Tho",
+        "loai": "phường"
+      },
+      {
+        "ma": "29010",
+        "ten": "Phường Tân Long",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "30",
+    "ten_tinh": "Tỉnh An Giang",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Long Xuyên",
+    "phuong_xa": [
+      {
+        "ma": "30001",
+        "ten": "Phường Mỹ Bình",
+        "loai": "phường"
+      },
+      {
+        "ma": "30002",
+        "ten": "Phường Mỹ Long",
+        "loai": "phường"
+      },
+      {
+        "ma": "30003",
+        "ten": "Phường Đông Xuyên",
+        "loai": "phường"
+      },
+      {
+        "ma": "30004",
+        "ten": "Phường Mỹ Xuyên",
+        "loai": "phường"
+      },
+      {
+        "ma": "30005",
+        "ten": "Phường Bình Đức",
+        "loai": "phường"
+      },
+      {
+        "ma": "30006",
+        "ten": "Phường Bình Khánh",
+        "loai": "phường"
+      },
+      {
+        "ma": "30007",
+        "ten": "Phường Mỹ Phước",
+        "loai": "phường"
+      },
+      {
+        "ma": "30008",
+        "ten": "Phường Mỹ Quý",
+        "loai": "phường"
+      },
+      {
+        "ma": "30009",
+        "ten": "Phường Mỹ Thới",
+        "loai": "phường"
+      },
+      {
+        "ma": "30010",
+        "ten": "Phường Mỹ Thạnh",
+        "loai": "phường"
+      },
+      {
+        "ma": "30011",
+        "ten": "Phường Rạch Giá",
+        "loai": "phường"
+      },
+      {
+        "ma": "30012",
+        "ten": "Phường Vĩnh Lợi",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "31",
+    "ten_tinh": "Tỉnh Cà Mau",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Cà Mau",
+    "phuong_xa": [
+      {
+        "ma": "31001",
+        "ten": "Phường 1",
+        "loai": "phường"
+      },
+      {
+        "ma": "31002",
+        "ten": "Phường 2",
+        "loai": "phường"
+      },
+      {
+        "ma": "31003",
+        "ten": "Phường 4",
+        "loai": "phường"
+      },
+      {
+        "ma": "31004",
+        "ten": "Phường 5",
+        "loai": "phường"
+      },
+      {
+        "ma": "31005",
+        "ten": "Phường 6",
+        "loai": "phường"
+      },
+      {
+        "ma": "31006",
+        "ten": "Phường 7",
+        "loai": "phường"
+      },
+      {
+        "ma": "31007",
+        "ten": "Phường 8",
+        "loai": "phường"
+      },
+      {
+        "ma": "31008",
+        "ten": "Phường 9",
+        "loai": "phường"
+      },
+      {
+        "ma": "31009",
+        "ten": "Xã An Xuyên",
+        "loai": "xã"
+      },
+      {
+        "ma": "31010",
+        "ten": "Xã Lý Văn Lâm",
+        "loai": "xã"
+      },
+      {
+        "ma": "31011",
+        "ten": "Phường Bạc Liêu",
+        "loai": "phường"
+      },
+      {
+        "ma": "31012",
+        "ten": "Phường Hiệp Thành",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "32",
+    "ten_tinh": "Tỉnh Lai Châu",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Lai Châu",
+    "phuong_xa": [
+      {
+        "ma": "32001",
+        "ten": "Phường Quyết Thắng",
+        "loai": "phường"
+      },
+      {
+        "ma": "32002",
+        "ten": "Phường Tân Phong",
+        "loai": "phường"
+      },
+      {
+        "ma": "32003",
+        "ten": "Phường Quyết Tiến",
+        "loai": "phường"
+      },
+      {
+        "ma": "32004",
+        "ten": "Phường Đoàn Kết",
+        "loai": "phường"
+      },
+      {
+        "ma": "32005",
+        "ten": "Xã San Thàng",
+        "loai": "xã"
+      },
+      {
+        "ma": "32006",
+        "ten": "Phường Đông Phong",
+        "loai": "phường"
+      },
+      {
+        "ma": "32007",
+        "ten": "Xã Nậm Loỏng",
+        "loai": "xã"
+      },
+      {
+        "ma": "32008",
+        "ten": "Phường Năm Căn",
+        "loai": "phường"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "33",
+    "ten_tinh": "Tỉnh Điện Biên",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Điện Biên Phủ",
+    "phuong_xa": [
+      {
+        "ma": "33001",
+        "ten": "Phường Noong Bua",
+        "loai": "phường"
+      },
+      {
+        "ma": "33002",
+        "ten": "Phường Him Lam",
+        "loai": "phường"
+      },
+      {
+        "ma": "33003",
+        "ten": "Phường Thanh Bình",
+        "loai": "phường"
+      },
+      {
+        "ma": "33004",
+        "ten": "Phường Tân Thanh",
+        "loai": "phường"
+      },
+      {
+        "ma": "33005",
+        "ten": "Phường Mường Thanh",
+        "loai": "phường"
+      },
+      {
+        "ma": "33006",
+        "ten": "Phường Nam Thanh",
+        "loai": "phường"
+      },
+      {
+        "ma": "33007",
+        "ten": "Phường Thanh Trường",
+        "loai": "phường"
+      },
+      {
+        "ma": "33008",
+        "ten": "Xã Thanh Minh",
+        "loai": "xã"
+      },
+      {
+        "ma": "33009",
+        "ten": "Xã Nà Tấu",
+        "loai": "xã"
+      }
+    ]
+  },
+  {
+    "ma_tinh": "34",
+    "ten_tinh": "Tỉnh Sơn La",
+    "loai": "Tỉnh",
+    "tinh_ly": "Thành phố Sơn La",
+    "phuong_xa": [
+      {
+        "ma": "34001",
+        "ten": "Phường Chiềng Lề",
+        "loai": "phường"
+      },
+      {
+        "ma": "34002",
+        "ten": "Phường Tô Hiệu",
+        "loai": "phường"
+      },
+      {
+        "ma": "34003",
+        "ten": "Phường Quyết Thắng",
+        "loai": "phường"
+      },
+      {
+        "ma": "34004",
+        "ten": "Phường Quyết Tâm",
+        "loai": "phường"
+      },
+      {
+        "ma": "34005",
+        "ten": "Xã Chiềng Ngần",
+        "loai": "xã"
+      },
+      {
+        "ma": "34006",
+        "ten": "Xã Hua La",
+        "loai": "xã"
+      },
+      {
+        "ma": "34007",
+        "ten": "Xã Chiềng Cọ",
+        "loai": "xã"
+      },
+      {
+        "ma": "34008",
+        "ten": "Xã Chiềng An",
+        "loai": "xã"
+      },
+      {
+        "ma": "34009",
+        "ten": "Xã Chiềng Xôm",
+        "loai": "xã"
+      }
+    ]
+  }
+]

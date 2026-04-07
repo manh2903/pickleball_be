@@ -66,7 +66,7 @@ const register = async (req, res, next) => {
  */
 const registerOwner = async (req, res, next) => {
   try {
-    const { name, email, phone, password, business_name } = req.body;
+    const { name, email, phone, password } = req.body;
 
     const existing = await User.findOne({ where: { email } });
     if (existing) throw new ApiError(409, 'Email đã được sử dụng');
@@ -76,12 +76,12 @@ const registerOwner = async (req, res, next) => {
       name, email, phone,
       password_hash: passwordHash,
       role: 'owner',
-      owner_status: 'pending',
+      owner_status: 'approved', // Auto-approved for now as per simplified flow
     });
 
     res.status(201).json({
       success: true,
-      message: 'Hồ sơ chủ sân đã được gửi. Vui lòng chờ admin xét duyệt (1–2 ngày làm việc).',
+      message: 'Đăng ký tài khoản chủ sân thành công! Bạn có thể đăng nhập ngay.',
       data: { user: sanitizeUser(user) },
     });
   } catch (err) {

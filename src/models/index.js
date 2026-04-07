@@ -16,6 +16,8 @@ const Incident = require('./Incident');
 const EquipmentRental = require('./EquipmentRental');
 const WithdrawalRequest = require('./WithdrawalRequest');
 const PlatformSetting = require('./PlatformSetting');
+const Province = require('./Province');
+const Ward = require('./Ward');
 
 // ====================================================================
 // ASSOCIATIONS
@@ -98,6 +100,16 @@ EquipmentRental.belongsTo(Booking, { foreignKey: 'booking_id', as: 'booking' });
 WithdrawalRequest.belongsTo(User, { foreignKey: 'owner_id', as: 'owner' });
 WithdrawalRequest.belongsTo(User, { foreignKey: 'processed_by', as: 'processor' });
 
+// ---- Locations ----
+Province.hasMany(Ward, { foreignKey: 'province_ma', as: 'wards' });
+Ward.belongsTo(Province, { foreignKey: 'province_ma', as: 'province' });
+
+// Venue location relationships
+Venue.belongsTo(Province, { foreignKey: 'province_id', as: 'provinceState' });
+Venue.belongsTo(Ward, { foreignKey: 'ward_id', as: 'wardState' });
+Province.hasMany(Venue, { foreignKey: 'province_id', as: 'venues' });
+Ward.hasMany(Venue, { foreignKey: 'ward_id', as: 'venues' });
+
 // ====================================================================
 const db = {
   sequelize,
@@ -116,6 +128,8 @@ const db = {
   EquipmentRental,
   WithdrawalRequest,
   PlatformSetting,
+  Province,
+  Ward,
 };
 
 module.exports = db;

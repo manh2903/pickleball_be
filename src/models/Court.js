@@ -33,14 +33,36 @@ const Court = sequelize.define('Court', {
     allowNull: true,
   },
   amenities: {
-    type: DataTypes.JSON,
+    type: DataTypes.TEXT,
     allowNull: true,
-    comment: 'Court-specific amenities: ["led_light","roof","ac","vip"]',
+    get() {
+      const val = this.getDataValue('amenities');
+      if (!val) return [];
+      try {
+        return typeof val === 'string' ? JSON.parse(val) : val;
+      } catch (e) {
+        return [];
+      }
+    },
+    set(val) {
+      this.setDataValue('amenities', Array.isArray(val) ? JSON.stringify(val) : val);
+    }
   },
   images: {
-    type: DataTypes.JSON,
+    type: DataTypes.TEXT,
     allowNull: true,
-    comment: 'Court-specific images',
+    get() {
+      const val = this.getDataValue('images');
+      if (!val) return [];
+      try {
+        return typeof val === 'string' ? JSON.parse(val) : val;
+      } catch (e) {
+        return [];
+      }
+    },
+    set(val) {
+      this.setDataValue('images', Array.isArray(val) ? JSON.stringify(val) : val);
+    }
   },
 
   // ===== Price override (null = inherit from venue default) =====

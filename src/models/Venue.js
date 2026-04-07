@@ -32,13 +32,19 @@ const Venue = sequelize.define('Venue', {
     type: DataTypes.STRING(500),
     allowNull: false,
   },
-  city: {
-    type: DataTypes.STRING(100),
-    allowNull: true,
+  address: {
+    type: DataTypes.STRING(500),
+    allowNull: false,
   },
-  district: {
-    type: DataTypes.STRING(100),
+  province_id: {
+    type: DataTypes.STRING(10),
     allowNull: true,
+    references: { model: 'provinces', key: 'ma_tinh' },
+  },
+  ward_id: {
+    type: DataTypes.STRING(10),
+    allowNull: true,
+    references: { model: 'wards', key: 'ma' },
   },
   latitude: {
     type: DataTypes.DECIMAL(10, 8),
@@ -53,14 +59,36 @@ const Venue = sequelize.define('Venue', {
     allowNull: true,
   },
   images: {
-    type: DataTypes.JSON,
+    type: DataTypes.TEXT,
     allowNull: true,
-    comment: 'Array of image URLs for the venue',
+    get() {
+      const val = this.getDataValue('images');
+      if (!val) return [];
+      try {
+        return typeof val === 'string' ? JSON.parse(val) : val;
+      } catch (e) {
+        return [];
+      }
+    },
+    set(val) {
+      this.setDataValue('images', Array.isArray(val) ? JSON.stringify(val) : val);
+    }
   },
   amenities: {
-    type: DataTypes.JSON,
+    type: DataTypes.TEXT,
     allowNull: true,
-    comment: 'Common amenities: ["wifi","parking","toilet","shower","canteen"]',
+    get() {
+      const val = this.getDataValue('amenities');
+      if (!val) return [];
+      try {
+        return typeof val === 'string' ? JSON.parse(val) : val;
+      } catch (e) {
+        return [];
+      }
+    },
+    set(val) {
+      this.setDataValue('amenities', Array.isArray(val) ? JSON.stringify(val) : val);
+    }
   },
   phone: {
     type: DataTypes.STRING(20),
@@ -132,7 +160,7 @@ const Venue = sequelize.define('Venue', {
   underscored: true,
   indexes: [
     { fields: ['owner_id'] },
-    { fields: ['city', 'district'] },
+    { fields: ['province_id', 'ward_id'] },
     { fields: ['status'] },
   ],
 });
