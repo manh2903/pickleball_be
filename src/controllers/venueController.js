@@ -56,8 +56,17 @@ const getVenues = async (req, res, next) => {
         ],
         raw: true,
       });
+      const plain = venue.toJSON();
+      // Parse JSON strings that MySQL may return as raw strings
+      const parseJSON = (val) => {
+        if (Array.isArray(val)) return val;
+        if (typeof val === 'string') { try { return JSON.parse(val); } catch { return []; } }
+        return val ?? [];
+      };
       return {
-        ...venue.toJSON(),
+        ...plain,
+        amenities: parseJSON(plain.amenities),
+        images: parseJSON(plain.images),
         avg_rating: parseFloat(ratingResult?.avg_rating || 0).toFixed(1),
         review_count: parseInt(ratingResult?.review_count || 0),
         court_count: venue.courts?.length || 0,
@@ -87,8 +96,12 @@ const getVenues = async (req, res, next) => {
  */
 const getVenueById = async (req, res, next) => {
   try {
-    const venue = await db.Venue.findByPk(req.params.id, {
-      where: { status: 'active' },
+    const param = req.params.id;
+    const isNumeric = /^\d+$/.test(param);
+    const where = isNumeric ? { id: param, status: 'active' } : { slug: param, status: 'active' };
+
+    const venue = await db.Venue.findOne({
+      where,
       include: [
         {
           model: db.Court, as: 'courts',
@@ -105,7 +118,22 @@ const getVenueById = async (req, res, next) => {
       ],
     });
     if (!venue) throw new ApiError(404, 'Không tìm thấy địa điểm');
-    res.json({ success: true, data: venue });
+    const parseJSON = (val) => {
+      if (Array.isArray(val)) return val;
+      if (typeof val === 'string') { try { return JSON.parse(val); } catch { return []; } }
+      return val ?? [];
+    };
+    const data = venue.toJSON();
+    data.amenities = parseJSON(data.amenities);
+    data.images = parseJSON(data.images);
+    if (data.courts) {
+      data.courts = data.courts.map(c => ({
+        ...c,
+        amenities: parseJSON(c.amenities),
+        images: parseJSON(c.images),
+      }));
+    }
+    res.json({ success: true, data });
   } catch (err) {
     next(err);
   }
