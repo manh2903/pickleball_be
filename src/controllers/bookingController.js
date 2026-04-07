@@ -123,10 +123,17 @@ const createBooking = async (req, res, next) => {
     const commissionAmount = Math.round((totalPrice * rate) / 100);
     const ownerRevenue = totalPrice - commissionAmount;
 
+    const { 
+      customer_name, customer_phone, customer_email 
+    } = req.body;
+
     const booking = await db.Booking.create({
       booking_code: bookingCode,
       user_id: user.id,
       venue_id: venueId,
+      customer_name,
+      customer_phone,
+      customer_email,
       booking_type: 'online',
       status: 'confirmed',
       total_price: totalPrice,
