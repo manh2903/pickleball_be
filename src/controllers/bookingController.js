@@ -116,7 +116,7 @@ const createBooking = async (req, res, next) => {
       await coupon.increment('used_count', { transaction: t });
     }
 
-    const bookingCode = `PB${Date.now().toString().slice(-8)}`;
+    const bookingCode = `PB${Date.now().toString().slice(-6)}`;
     const qrData = JSON.stringify({ code: bookingCode, slot_ids: ids, user_id: user.id });
     const qrCodeBase64 = await qrcode.toDataURL(qrData);
 
@@ -157,8 +157,9 @@ const createBooking = async (req, res, next) => {
       { where: { id: { [Op.in]: ids } }, transaction: t }
     );
 
+    const courtId = slots[0].court_id;
     const io = req.app.get('io');
-    io?.to(`court-${courtId}`).emit('slots-updated', { ids, status: 'booked' });
+    io?.to(`court-${courtId}`).emit('slots-updated', { ids, status: 'booked', userId: req.user.id });
     io?.to(`venue-${venueId}`).emit('new-booking', { booking, slots });
     io?.to('admin-room').emit('new-booking', { booking, venue_name: venue.name });
 
@@ -186,10 +187,16 @@ const createBooking = async (req, res, next) => {
       }).catch(e => console.error('Booking Email failed', e));
     }
 
-    const points = Math.floor(totalPrice / 10000);
-    if (points > 0) await user.increment('points', { by: points });
+    let paymentUrl = null;
+    if (payment_method === 'vnpay') {
+      const vnpay = require('../utils/vnpay');
+      paymentUrl = vnpay.createPaymentUrl(req, {
+        orderId: booking.booking_code,
+        amount: booking.total_price,
+      });
+    }
 
-    res.status(201).json({ success: true, data: booking });
+    res.status(201).json({ success: true, data: booking, paymentUrl });
   } catch (err) {
     await t.rollback();
     next(err);
@@ -310,12 +317,17 @@ const getBookingById = async (req, res, next) => {
     if (!booking) throw new ApiError(404, 'Không tìm thấy booking');
     
     // Privacy Check: User can see their own, Owner sees their venue's, Admin sees all
-    const isOwner = booking.slots?.[0]?.court?.venue?.owner_id === req.user?.id;
-    const isUser = booking.user_id === req.user?.id;
+    const isOwner = booking.slots?.[0]?.court?.venue?.owner_id == req.user?.id;
+    const isUser = booking.user_id == req.user?.id;
     const isAdmin = req.user?.role === 'admin';
     const isStaff = req.user?.role === 'staff';
 
     if (!isUser && !isOwner && !isAdmin && !isStaff) {
+       console.log('❌ Privacy Check Failed:', { 
+         booking_user: booking.user_id, 
+         req_user: req.user?.id,
+         role: req.user?.role 
+       });
        throw new ApiError(403, 'Bạn không có quyền truy cập thông tin này');
     }
 

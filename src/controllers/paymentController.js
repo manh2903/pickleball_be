@@ -10,13 +10,16 @@ const createVNPayUrl = async (req, res, next) => {
     const { bookingId } = req.body;
     
     // 1. Get booking
-    const booking = await db.Booking.findByPk(bookingId);
+    const isCode = isNaN(Number(bookingId));
+    const where = isCode ? { booking_code: bookingId } : { id: bookingId };
+    
+    const booking = await db.Booking.findOne({ where });
     if (!booking) throw new ApiError(404, 'Không tìm thấy đơn đặt sân');
     if (booking.payment_status === 'paid') throw new ApiError(400, 'Đơn đặt sân đã được thanh toán');
 
     // 2. Create VNPay URL
     const paymentUrl = vnpay.createPaymentUrl(req, {
-      orderId: booking.id,
+      orderId: booking.booking_code,
       amount: booking.total_price,
     });
 
@@ -62,7 +65,9 @@ const vnpayIPN = async (req, res, next) => {
     const bookingId = query.vnp_TxnRef;
     const responseCode = query.vnp_ResponseCode;
 
-    const booking = await db.Booking.findByPk(bookingId);
+    const isCode = isNaN(Number(bookingId));
+    const where = isCode ? { booking_code: bookingId } : { id: bookingId };
+    const booking = await db.Booking.findOne({ where });
     if (!booking) return res.json({ RspCode: '01', Message: 'Order not found' });
     if (booking.payment_status === 'paid') return res.json({ RspCode: '02', Message: 'Order already confirmed' });
 
@@ -80,7 +85,11 @@ const vnpayIPN = async (req, res, next) => {
 const { sendEmail } = require('../utils/mailer');
 
 async function handlePaymentSuccess(req, bookingId, transactionId) {
-  const booking = await db.Booking.findByPk(bookingId, {
+  const isCode = isNaN(Number(bookingId));
+  const where = isCode ? { booking_code: bookingId } : { id: bookingId };
+  
+  const booking = await db.Booking.findOne({
+    where,
     include: [{ model: db.User, as: 'user' }]
   });
   if (!booking) return;
@@ -90,7 +99,7 @@ async function handlePaymentSuccess(req, bookingId, transactionId) {
 
   // 2. Create Payment Record (Tier-based financial tracking)
   await db.Payment.create({
-    booking_id: bookingId,
+    booking_id: booking.id,
     amount: booking.total_price,
     method: 'vnpay',
     status: 'completed',

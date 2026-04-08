@@ -7,7 +7,7 @@ const {
 
 // Customer booking routes
 router.get('/availability', getAvailability);               // public
-router.post('/', authenticate, authorize('user', 'admin'), createBooking);
+router.post('/', authenticate, createBooking);
 router.get('/my', authenticate, getMyBookings);
 router.get('/:id', authenticate, getBookingById);
 router.post('/:id/cancel', authenticate, cancelBooking);
