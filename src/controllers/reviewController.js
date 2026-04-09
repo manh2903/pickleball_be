@@ -7,29 +7,43 @@ const { ApiError } = require('../middleware/errorMiddleware');
  */
 const createReview = async (req, res, next) => {
   try {
-    const { booking_id, rating, comment } = req.body;
+    const { booking_id, venue_id, rating, comment } = req.body;
 
-    // 1. Verify booking
-    const booking = await db.Booking.findOne({
-      where: { id: booking_id, user_id: req.user.id }
-    });
-
-    if (!booking) throw new ApiError(404, 'Không tìm thấy đơn đặt sân');
-    if (booking.status !== 'completed' && booking.status !== 'checked_in') {
-      throw new ApiError(400, 'Bạn chỉ có thể đánh giá sau khi đã sử dụng sân');
+    if (!booking_id && !venue_id) {
+      throw new ApiError(400, 'Thiếu thông tin địa điểm hoặc đơn đặt sân');
     }
 
-    // 2. Check if already reviewed
-    const existing = await db.Review.findOne({ where: { booking_id } });
-    if (existing) throw new ApiError(400, 'Bạn đã đánh giá đơn đặt sân này rồi');
+    let targetVenueId = venue_id;
+
+    // A. Case 1: Reviewing a specific booking
+    if (booking_id) {
+      const booking = await db.Booking.findOne({
+        where: { id: booking_id, user_id: req.user.id }
+      });
+
+      if (!booking) throw new ApiError(404, 'Không tìm thấy đơn đặt sân');
+      if (booking.status !== 'completed' && booking.status !== 'checked_in') {
+        throw new ApiError(400, 'Bạn chỉ có thể đánh giá sau khi đã sử dụng sân');
+      }
+
+      // Check if already reviewed
+      const existing = await db.Review.findOne({ where: { booking_id } });
+      if (existing) throw new ApiError(400, 'Bạn đã đánh giá đơn đặt sân này rồi');
+
+      targetVenueId = booking.venue_id;
+    }
+
+    // B. Case 2: General venue review (using venue_id)
+    if (!booking_id && venue_id) {
+      const venueExists = await db.Venue.findByPk(venue_id);
+      if (!venueExists) throw new ApiError(404, 'Không tìm thấy địa điểm');
+    }
 
     // 3. Create review
-    const { id, court_id, venue_id } = booking;
     const review = await db.Review.create({
       user_id: req.user.id,
-      venue_id,
-      court_id,
-      booking_id: id,
+      venue_id: targetVenueId,
+      booking_id: booking_id || null,
       rating,
       comment,
       is_visible: true
@@ -66,8 +80,7 @@ const getVenueReviews = async (req, res, next) => {
     const { count, rows } = await db.Review.findAndCountAll({
       where: { venue_id: venueId, is_visible: true },
       include: [
-        { model: db.User, as: 'user', attributes: ['id', 'name', 'avatar'] },
-        { model: db.Court, as: 'court', attributes: ['id', 'name'] }
+        { model: db.User, as: 'user', attributes: ['id', 'name', 'avatar'] }
       ],
       order: [['created_at', 'DESC']],
       limit: parseInt(limit),

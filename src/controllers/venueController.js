@@ -115,7 +115,26 @@ const getVenueById = async (req, res, next) => {
         { model: db.Ward, as: 'wardState', attributes: ['ma', 'ten'] },
       ],
     });
-    res.json({ success: true, data: venue });
+    if (!venue) throw new ApiError(404, 'Không tìm thấy địa điểm');
+
+    // Dynamically calculate average rating and review count
+    const ratingResult = await db.Review.findOne({
+      where: { venue_id: venue.id, is_visible: true },
+      attributes: [
+        [db.sequelize.fn('AVG', db.sequelize.col('rating')), 'avg_rating'],
+        [db.sequelize.fn('COUNT', db.sequelize.col('id')), 'review_count'],
+      ],
+      raw: true,
+    });
+
+    const venueJson = venue.toJSON();
+    const finalData = {
+      ...venueJson,
+      avg_rating: parseFloat(ratingResult?.avg_rating || 0).toFixed(1),
+      review_count: parseInt(ratingResult?.review_count || 0),
+    };
+
+    res.json({ success: true, data: finalData });
   } catch (err) {
     next(err);
   }

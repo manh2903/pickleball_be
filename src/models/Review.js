@@ -19,14 +19,9 @@ const Review = sequelize.define('Review', {
     references: { model: 'venues', key: 'id' },
     comment: 'Venue the review is for (denormalized from court)',
   },
-  court_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: { model: 'courts', key: 'id' },
-  },
   booking_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
     references: { model: 'bookings', key: 'id' },
   },
   rating: {
@@ -60,9 +55,7 @@ const Review = sequelize.define('Review', {
   underscored: true,
   indexes: [
     { fields: ['venue_id'] },
-    { fields: ['court_id'] },
     { fields: ['user_id'] },
-    { unique: true, fields: ['booking_id'], name: 'unique_booking_review' },
   ],
 });
 
