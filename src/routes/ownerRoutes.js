@@ -3,9 +3,10 @@ const router = express.Router();
 const { authenticate, authorize } = require('../middleware/authMiddleware');
 const { getStats, getVenueStaffs, createVenueStaff, getReports, updateStaffPassword, updateStaff } = require('../controllers/ownerController');
 const { ownerGetVenueBookings, ownerGetBookingDetail } = require('../controllers/bookingController');
-const { getOwnerVenues, getOwnerVenueById, createVenue, updateVenue } = require('../controllers/venueController');
+const { getOwnerVenues, getOwnerVenueById, createVenue, updateVenue, uploadVenueImage, deleteVenueImage } = require('../controllers/venueController');
 const { ownerGetCourts, createCourt, updateCourt, deleteCourt } = require('../controllers/courtController');
 const { getVenueReviewsForOwner } = require('../controllers/reviewController');
+const upload = require('../middleware/uploadMiddleware');
 
 // All routes here require 'owner' role
 router.use(authenticate);
@@ -22,6 +23,8 @@ router.get('/venue', getOwnerVenues); // Alias
 router.post('/venues', createVenue);
 router.put('/venues/:id', updateVenue);
 router.put('/venue', updateVenue); // Alias
+router.post('/venues/upload', upload.single('image'), uploadVenueImage);
+router.delete('/venues/image', deleteVenueImage);
 
 // === Bookings ===
 router.get('/bookings', ownerGetVenueBookings);

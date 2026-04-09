@@ -1,6 +1,8 @@
 const db = require('../models');
 const { ApiError } = require('../middleware/errorMiddleware');
 const { Op } = require('sequelize');
+const path = require('path');
+const fs = require('fs');
 
 /**
  * GET /api/venues — Public marketplace listing
@@ -332,8 +334,100 @@ const adminSetCommission = async (req, res, next) => {
   }
 };
 
+/**
+ * POST /api/owner/venues/upload — Owner: upload venue image
+ */
+const uploadVenueImage = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      throw new ApiError(400, 'Vui lòng chọn hình ảnh để tải lên');
+    }
+
+    const { venue_id } = req.body;
+    if (!venue_id) {
+       throw new ApiError(400, 'Thiếu Venus ID');
+    }
+
+    const venue = await db.Venue.findOne({
+      where: { id: venue_id, owner_id: req.user.id }
+    });
+
+    if (!venue) {
+      throw new ApiError(404, 'Không tìm thấy địa điểm hoặc bạn không có quyền');
+    }
+
+    const filePath = `/uploads/venues/${req.file.filename}`;
+    
+    // Update database immediately
+    const currentImages = Array.isArray(venue.images) ? venue.images : [];
+    const newImages = [...currentImages, filePath];
+    
+    await venue.update({ images: newImages });
+
+    res.json({
+      success: true,
+      message: 'Tải ảnh và lưu vào hệ thống thành công',
+      data: { url: filePath, images: newImages }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * DELETE /api/owner/venues/image — Owner: remove image from venue
+ */
+const deleteVenueImage = async (req, res, next) => {
+  try {
+    const { venue_id, imageUrl } = req.body;
+    
+    const venue = await db.Venue.findOne({
+      where: { id: venue_id, owner_id: req.user.id }
+    });
+
+    if (!venue) {
+      throw new ApiError(404, 'Không tìm thấy địa điểm hoặc bạn không có quyền');
+    }
+
+    // 1. Update Database
+    const currentImages = Array.isArray(venue.images) ? venue.images : [];
+    const newImages = currentImages.filter(img => img !== imageUrl);
+    await venue.update({ images: newImages });
+
+    // 2. Rename Physical File
+    try {
+      // imageUrl is usually /uploads/venues/image-123.jpg
+      const relativePath = imageUrl.startsWith('/') ? imageUrl.substring(1) : imageUrl;
+      const fullPath = path.join(process.cwd(), relativePath);
+
+      if (fs.existsSync(fullPath)) {
+        const dir = path.dirname(fullPath);
+        const ext = path.extname(fullPath);
+        const baseName = path.basename(fullPath, ext);
+        
+        const newFileName = `deleted_${venue_id}_${Date.now()}${ext}`;
+        const newPath = path.join(dir, newFileName);
+        
+        fs.renameSync(fullPath, newPath);
+      }
+    } catch (fsErr) {
+      console.error('Error renaming deleted image file:', fsErr);
+      // We don't fail the request if file renaming fails, as DB is updated
+    }
+
+    res.json({
+      success: true,
+      message: 'Xóa ảnh thành công',
+      data: { images: newImages }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getVenues, getVenueById,
   getOwnerVenues, getOwnerVenueById, createVenue, updateVenue,
   adminGetAllVenues, adminUpdateVenueStatus, adminSetCommission,
+  uploadVenueImage, deleteVenueImage,
 };
