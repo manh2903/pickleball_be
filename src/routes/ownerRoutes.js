@@ -5,6 +5,7 @@ const { getStats, getVenueStaffs, createVenueStaff, getReports, updateStaffPassw
 const { ownerGetVenueBookings, ownerGetBookingDetail } = require('../controllers/bookingController');
 const { getOwnerVenues, getOwnerVenueById, createVenue, updateVenue } = require('../controllers/venueController');
 const { ownerGetCourts, createCourt, updateCourt, deleteCourt } = require('../controllers/courtController');
+const { getVenueReviewsForOwner } = require('../controllers/reviewController');
 
 // All routes here require 'owner' role
 router.use(authenticate);
@@ -31,6 +32,9 @@ router.get('/venues/:venueId/courts', ownerGetCourts);
 router.post('/venues/:venueId/courts', createCourt);
 router.put('/venues/:venueId/courts/:id', updateCourt);
 router.delete('/venues/:venueId/courts/:id', deleteCourt);
+
+// === Reviews ===
+router.get('/venues/:venueId/reviews', getVenueReviewsForOwner);
 
 // === Staff Management ===
 router.get('/venues/:id/staffs', getVenueStaffs);

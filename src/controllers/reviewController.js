@@ -49,6 +49,19 @@ const createReview = async (req, res, next) => {
       is_visible: true
     });
 
+    // 4. Emit real-time notification to owner/staff
+    const io = req.app.get('io');
+    if (io) {
+      // Fetch full review with user info for real-time display
+      const fullReview = await db.Review.findByPk(review.id, {
+        include: [
+          { model: db.User, as: 'user', attributes: ['id', 'name', 'avatar', 'phone'] },
+          { model: db.Booking, as: 'booking', attributes: ['id', 'booking_code'] }
+        ]
+      });
+      io.to(`venue-${targetVenueId}`).emit('new-review', fullReview);
+    }
+
     res.status(201).json({
       success: true,
       message: 'Cảm ơn bạn đã gửi đánh giá! ❤️',
@@ -101,7 +114,51 @@ const getVenueReviews = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /api/owner/venues/:venueId/reviews — Owner/Staff view all reviews for their venue
+ */
+const getVenueReviewsForOwner = async (req, res, next) => {
+  try {
+    const { venueId } = req.params;
+    const { page = 1, limit = 20 } = req.query;
+
+    // Check if user has permission for this venue
+    if (req.user.role === 'owner') {
+      const venue = await db.Venue.findOne({ where: { id: venueId, owner_id: req.user.id } });
+      if (!venue) throw new ApiError(403, 'Bạn không có quyền xem đánh giá của địa điểm này');
+    } else if (req.user.role === 'staff') {
+      if (parseInt(req.user.venue_id) !== parseInt(venueId)) {
+        throw new ApiError(403, 'Bạn không có quyền xem đánh giá của địa điểm này');
+      }
+    }
+
+    const { count, rows } = await db.Review.findAndCountAll({
+      where: { venue_id: venueId },
+      include: [
+        { model: db.User, as: 'user', attributes: ['id', 'name', 'avatar', 'phone'] },
+        { model: db.Booking, as: 'booking', attributes: ['id', 'booking_code'] }
+      ],
+      order: [['created_at', 'DESC']],
+      limit: parseInt(limit),
+      offset: (parseInt(page) - 1) * parseInt(limit)
+    });
+
+    res.json({
+      success: true,
+      data: {
+        reviews: rows,
+        total: count,
+        page: parseInt(page),
+        totalPages: Math.ceil(count / parseInt(limit))
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createReview,
-  getVenueReviews
+  getVenueReviews,
+  getVenueReviewsForOwner
 };

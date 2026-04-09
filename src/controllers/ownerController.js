@@ -68,8 +68,12 @@ const getStats = async (req, res, next) => {
     const recentBookings = await db.Booking.findAll({
       where: { venue_id: { [Op.in]: venueIds } },
       include: [
-        { model: db.Court, as: 'court', attributes: ['name'] },
-        { model: db.TimeSlot, as: 'slots', attributes: ['date', 'start_time', 'end_time'] },
+        { 
+          model: db.TimeSlot, 
+          as: 'slots', 
+          attributes: ['date', 'start_time', 'end_time'],
+          include: [{ model: db.Court, as: 'court', attributes: ['name'] }]
+        },
         { model: db.User, as: 'user', attributes: ['name', 'phone'] }
       ],
       order: [['created_at', 'DESC']],

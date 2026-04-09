@@ -9,6 +9,7 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
     dialect: 'mysql',
+    timezone: "+07:00",
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
     pool: {
       max: 10,
@@ -19,6 +20,14 @@ const sequelize = new Sequelize(
     define: {
       timestamps: true,
       underscored: true,
+    },
+    dialectOptions: {
+      timezone: "+07:00",
+      dateStrings: true,
+      typeCast: true,
+      connectTimeout: 60000,
+      enableKeepAlive: true,
+      keepAliveInitialDelay: 10000,
     },
   }
 );
