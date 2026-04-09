@@ -218,18 +218,28 @@ const getReports = async (req, res, next) => {
       order: [[db.sequelize.fn('DATE', db.sequelize.col('created_at')), 'ASC']]
     });
 
-    // 3. Top Courts
+    // 3. Top Courts (via TimeSlots)
     const topCourts = await db.Booking.findAll({
       attributes: [
-        [db.sequelize.col('court.name'), 'name'],
+        [db.sequelize.col('slots.court.name'), 'name'],
         [db.sequelize.fn('COUNT', db.sequelize.col('Booking.id')), 'value']
       ],
-      include: [{ model: db.Court, as: 'court', attributes: [] }],
+      include: [{
+        model: db.TimeSlot,
+        as: 'slots',
+        attributes: [],
+        include: [{
+          model: db.Court,
+          as: 'court',
+          attributes: []
+        }]
+      }],
       where: { venue_id: venueId, created_at: { [Op.gte]: startDate }, status: { [Op.ne]: 'cancelled' } },
-      group: ['court.id', 'court.name'],
+      group: ['slots.court.id', 'slots.court.name'],
       order: [[db.sequelize.fn('COUNT', db.sequelize.col('Booking.id')), 'DESC']],
       limit: 5,
-      raw: true
+      raw: true,
+      subQuery: false
     });
 
     res.json({
