@@ -18,11 +18,16 @@ const Coupon = sequelize.define('Coupon', {
     references: { model: 'venues', key: 'id' },
     comment: 'null = platform-wide coupon (admin); set = venue-specific (owner)',
   },
+  type: {
+    type: DataTypes.ENUM('venue', 'platform'),
+    allowNull: false,
+    defaultValue: 'venue',
+    comment: 'venue: owner pays for promotion; platform: admin pays for promotion',
+  },
   created_by: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: { model: 'users', key: 'id' },
-    comment: 'admin or owner user_id',
   },
   code: {
     type: DataTypes.STRING(50),
@@ -30,26 +35,26 @@ const Coupon = sequelize.define('Coupon', {
     unique: true,
   },
   description: {
-    type: DataTypes.STRING(255),
+    type: DataTypes.TEXT,
     allowNull: true,
   },
   discount_type: {
-    type: DataTypes.ENUM('percent', 'fixed'),
+    type: DataTypes.ENUM('percentage', 'fixed'),
     allowNull: false,
   },
   discount_value: {
-    type: DataTypes.DECIMAL(10, 2),
+    type: DataTypes.DECIMAL(12, 2),
     allowNull: false,
   },
   min_booking_amount: {
-    type: DataTypes.DECIMAL(12, 0),
+    type: DataTypes.DECIMAL(15, 0),
     defaultValue: 0,
   },
   max_discount_amount: {
-    type: DataTypes.DECIMAL(12, 0),
+    type: DataTypes.DECIMAL(15, 0),
     allowNull: true,
   },
-  max_uses: {
+  usage_limit: {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
@@ -57,21 +62,17 @@ const Coupon = sequelize.define('Coupon', {
     type: DataTypes.INTEGER,
     defaultValue: 0,
   },
-  max_uses_per_user: {
-    type: DataTypes.INTEGER,
-    defaultValue: 1,
-  },
-  starts_at: {
+  start_date: {
     type: DataTypes.DATE,
-    allowNull: true,
+    allowNull: false,
   },
-  expires_at: {
+  end_date: {
     type: DataTypes.DATE,
-    allowNull: true,
+    allowNull: false,
   },
-  is_active: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
+  status: {
+    type: DataTypes.ENUM('active', 'inactive', 'expired'),
+    defaultValue: 'active',
   },
 }, {
   tableName: 'coupons',

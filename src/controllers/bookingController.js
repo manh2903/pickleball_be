@@ -223,6 +223,11 @@ const createBooking = async (req, res, next) => {
     const ids = slot_ids || (slot_id ? [slot_id] : []);
     if (ids.length === 0) throw new ApiError(400, 'Vui lòng chọn ít nhất một khung giờ');
 
+    // Online bookings MUST use online payment to prevent "bùng" sân
+    if (payment_method !== 'vnpay') {
+      throw new ApiError(400, 'Phương thức thanh toán không hợp lệ cho đặt sân trực tuyến. Vui lòng sử dụng VNPay.');
+    }
+
     const slots = await db.TimeSlot.findAll({
       where: { id: { [Op.in]: ids } },
       include: [
@@ -243,33 +248,37 @@ const createBooking = async (req, res, next) => {
     }
 
     let totalPrice = slots.reduce((sum, s) => sum + parseFloat(s.price), 0);
+    const originalTotalPrice = totalPrice;
     let couponId = null;
+    let couponType = 'venue'; // default
     let discountAmount = 0;
 
     if (coupon_code) {
       const coupon = await db.Coupon.findOne({
         where: {
           code: coupon_code,
-          is_active: true,
-          [Op.or]: [{ expires_at: null }, { expires_at: { [Op.gte]: new Date() } }],
-          [Op.or]: [{ max_uses: null }, { max_uses: { [Op.gt]: db.sequelize.col('used_count') } }],
+          status: 'active',
+          [Op.or]: [{ end_date: null }, { end_date: { [Op.gte]: new Date() } }],
+          [Op.or]: [{ usage_limit: null }, { usage_limit: { [Op.gt]: db.sequelize.col('used_count') } }],
         },
         transaction: t,
       });
 
-      if (!coupon) throw new ApiError(400, 'Mã giảm giá không hợp lệ');
+      if (!coupon) throw new ApiError(400, 'Mã giảm giá không hợp lệ hoặc đã hết hạn');
       if (totalPrice < (coupon.min_booking_amount || 0)) {
-        throw new ApiError(400, `Cần tối thiểu ${coupon.min_booking_amount}đ để dùng mã này`);
+        throw new ApiError(400, `Cần tối thiểu ${new Intl.NumberFormat('vi-VN').format(coupon.min_booking_amount)}đ để dùng mã này`);
       }
 
-      if (coupon.discount_type === 'percent') {
+      if (coupon.discount_type === 'percentage') {
         discountAmount = Math.round((totalPrice * coupon.discount_value) / 100);
         if (coupon.max_discount_amount) discountAmount = Math.min(discountAmount, coupon.max_discount_amount);
       } else {
         discountAmount = coupon.discount_value;
       }
-      totalPrice -= discountAmount;
+      
+      totalPrice = Math.max(0, totalPrice - discountAmount);
       couponId = coupon.id;
+      couponType = coupon.type; // 'venue' or 'platform'
       await coupon.increment('used_count', { transaction: t });
     }
 
@@ -281,8 +290,22 @@ const createBooking = async (req, res, next) => {
     const platformSetting = await db.PlatformSetting.findOne({ where: { key: 'default_commission_rate' } });
     const defaultRate = parseFloat(platformSetting?.value || 0);
     const rate = venue.commission_rate > 0 ? venue.commission_rate : defaultRate;
-    const commissionAmount = Math.round((totalPrice * rate) / 100);
-    const ownerRevenue = totalPrice - commissionAmount;
+
+    // Tính toán tài chính dựa trên loại phiếu giảm giá
+    let commissionAmount = 0;
+    let ownerRevenue = 0;
+
+    if (couponId && couponType === 'platform') {
+      // Nền tảng trả tiền cho khoản giảm giá: Chủ sở hữu nhận được doanh thu dựa trên giá GỐC.
+      const originalCommission = Math.round((originalTotalPrice * rate) / 100);
+      ownerRevenue = originalTotalPrice - originalCommission;
+      // Lợi nhuận của Admin giảm đi discountAmount
+      commissionAmount = originalCommission - discountAmount; 
+    } else {
+      // Chủ sở hữu trả tiền hoặc không có phiếu giảm giá: Chủ sở hữu nhận được doanh thu dựa trên giá CUỐI CÙNG
+      commissionAmount = Math.round((totalPrice * rate) / 100);
+      ownerRevenue = totalPrice - commissionAmount;
+    }
 
     const { 
       customer_name, customer_phone, customer_email 
@@ -298,6 +321,7 @@ const createBooking = async (req, res, next) => {
       booking_type: 'online',
       status: 'confirmed',
       total_price: totalPrice,
+      original_price: originalTotalPrice, // Optional store for transparency
       payment_status: 'unpaid',
       payment_method: payment_method,
       coupon_id: couponId,
@@ -506,18 +530,38 @@ const createWalkInBooking = async (req, res, next) => {
     const { slot_ids, customer_name, customer_phone, customer_email, notes } = req.body;
     const slots = await db.TimeSlot.findAll({
       where: { id: { [Op.in]: slot_ids } },
-      include: [{ model: db.Court, as: 'court' }],
+      include: [
+        { model: db.Court, as: 'court' },
+        { model: db.Venue, as: 'venue' }
+      ],
       lock: t.LOCK.UPDATE,
       transaction: t,
     });
+
+    if (slots.length === 0) throw new ApiError(404, 'Không tìm thấy khung giờ');
+    
+    const venue = slots[0].venue;
+    const platformSetting = await db.PlatformSetting.findOne({ where: { key: 'default_commission_rate' } });
+    const defaultRate = parseFloat(platformSetting?.value || 0);
+    const rate = venue.commission_rate > 0 ? venue.commission_rate : defaultRate;
+
     const bookingCode = `WI${Date.now().toString().slice(-8)}`;
     const totalPrice = slots.reduce((sum, s) => sum + parseFloat(s.price), 0);
+    const commissionAmount = Math.round((totalPrice * rate) / 100);
+    const ownerRevenue = totalPrice - commissionAmount;
+
     const booking = await db.Booking.create({
       booking_code: bookingCode,
-      venue_id: slots[0].venue_id,
+      venue_id: venue.id,
       customer_name, customer_phone, customer_email,
-      booking_type: 'walkin', status: 'confirmed',
-      total_price: totalPrice, payment_status: 'unpaid', payment_method: 'cash',
+      booking_type: 'walkin', 
+      status: 'confirmed',
+      total_price: totalPrice, 
+      payment_status: 'unpaid', 
+      payment_method: 'cash',
+      commission_rate: rate,
+      commission_amount: commissionAmount,
+      owner_revenue: ownerRevenue,
       notes,
     }, { transaction: t });
     await db.TimeSlot.update({ booking_id: booking.id, status: 'booked' }, { where: { id: { [Op.in]: slot_ids } }, transaction: t });

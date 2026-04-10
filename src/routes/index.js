@@ -15,6 +15,7 @@ const paymentRoutes = require('./paymentRoutes');
 const incidentRoutes = require('./incidentRoutes');
 const withdrawalRoutes = require('./withdrawalRoutes');
 const locationRoutes = require('./locationRoutes');
+const couponRoutes = require('./couponRoutes');
 
 // Public routes
 router.use('/auth', authRoutes);
@@ -25,6 +26,7 @@ router.use('/payments', paymentRoutes); // Includes VNPay return/IPN
 router.use('/incidents', incidentRoutes); // All routes protected
 router.use('/withdrawals', withdrawalRoutes);
 router.use('/locations', locationRoutes);
+router.use('/coupons', couponRoutes);
 
 // Protected routes
 router.use('/user', userRoutes);
