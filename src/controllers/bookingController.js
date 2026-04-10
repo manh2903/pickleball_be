@@ -10,45 +10,202 @@ const qrcode = require('qrcode');
 const getAvailability = async (req, res, next) => {
   try {
     const { court_id, venue_id, date } = req.query;
-    if (!date) throw new ApiError(400, 'Thiếu date');
+    
+    // Validate required fields
+    if (!date) throw new ApiError(400, "Thiếu date");
+    if (!court_id && !venue_id) throw new ApiError(400, "Thiếu court_id hoặc venue_id");
+    
+    // Validate date (không cho phép ngày trong quá khứ)
+    const requestDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (isNaN(requestDate.getTime())) throw new ApiError(400, "Date không hợp lệ");
+    
+    const isPastDate = requestDate < today;
+    
+    let venue;
+    let courts = [];
 
-    let slots;
-    let info = {};
-
+    // 1. Find Venue and Courts
     if (court_id) {
-      const court = await db.Court.findByPk(court_id);
-      if (!court) throw new ApiError(404, 'Không tìm thấy sân');
-      info.court = court;
-      slots = await db.TimeSlot.findAll({
-        where: { court_id, date },
-        include: [{ model: db.Court, as: 'court', attributes: ['name'] }],
-        order: [['start_time', 'ASC']],
+      const court = await db.Court.findByPk(court_id, {
+        include: [{ model: db.Venue, as: "venue" }],
       });
+      if (!court) throw new ApiError(404, "Không tìm thấy sân");
+      venue = court.venue;
+      courts = [court];
     } else if (venue_id) {
       const isSlug = isNaN(Number(venue_id));
       const venueWhere = isSlug ? { slug: venue_id } : { id: venue_id };
-      
-      const venue = await db.Venue.findOne({
+      venue = await db.Venue.findOne({
         where: venueWhere,
-        include: [{ model: db.Court, as: 'courts' }]
+        include: [{ 
+          model: db.Court, 
+          as: "courts", 
+          where: { status: { [Op.in]: ['active', 'maintenance'] } }, 
+          required: false 
+        }],
       });
-      if (!venue) throw new ApiError(404, 'Không tìm thấy địa điểm');
-      info.venue = venue;
-      
-      const courtIds = venue.courts.map(c => c.id);
-      slots = await db.TimeSlot.findAll({
-        where: { 
-          court_id: { [Op.in]: courtIds }, 
-          date 
+      if (!venue) throw new ApiError(404, "Không tìm thấy địa điểm");
+      courts = venue.courts || [];
+    }
+    
+    if (courts.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          venue,
+          slots: [],
+          message: "Không có sân nào hoạt động"
         },
-        include: [{ model: db.Court, as: 'court', attributes: ['name'] }],
-        order: [['start_time', 'ASC']],
       });
-    } else {
-      throw new ApiError(400, 'Thiếu court_id hoặc venue_id');
     }
 
-    res.json({ success: true, data: { ...info, slots } });
+    // 2. Sync status for future slots (nếu court chuyển sang maintenance)
+    const courtIds = courts.map((c) => c.id);
+    const maintenanceCourtIds = courts
+      .filter(c => c.status === 'maintenance')
+      .map(c => c.id);
+    
+    if (maintenanceCourtIds.length > 0 && !isPastDate) {
+      await db.TimeSlot.update(
+        { status: 'maintenance' },
+        {
+          where: {
+            court_id: { [Op.in]: maintenanceCourtIds },
+            date: { [Op.gte]: date },
+            status: { [Op.ne]: 'maintenance' } // Chỉ update slot chưa phải maintenance
+          }
+        }
+      );
+    }
+
+    // 3. Smart Sync Slots (Tạo nếu thiếu - xử lý trường hợp chủ sân đổi giờ)
+    if (courts.length > 0 && !isPastDate) {
+      const t = await db.sequelize.transaction();
+      try {
+        const startHour = venue.open_time ? parseInt(venue.open_time.split(':')[0]) : 6;
+        const endHour = venue.close_time ? parseInt(venue.close_time.split(':')[0]) : 22;
+        
+        // Lấy danh sách slot hiện có để so sánh
+        const existingSlots = await db.TimeSlot.findAll({
+          where: { court_id: { [Op.in]: courtIds }, date },
+          attributes: ['court_id', 'start_time'],
+          transaction: t
+        });
+
+        // Tạo map để check nhanh: {courtId: [7, 8, 9...]}
+        const existingMap = {};
+        existingSlots.forEach(s => {
+          const h = parseInt(s.start_time.split(':')[0]);
+          if (!existingMap[s.court_id]) existingMap[s.court_id] = [];
+          existingMap[s.court_id].push(h);
+        });
+
+        const slotsToCreate = [];
+        const dayOfWeek = requestDate.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+        for (const court of courts) {
+          if (court.status === 'inactive') continue;
+
+          for (let h = startHour; h < endHour; h++) {
+            // Nếu giờ này chưa có trong DB cho sân này -> Thêm vào list tạo mới
+            if (!existingMap[court.id]?.includes(h)) {
+              const startTimeStr = `${h.toString().padStart(2, "0")}:00:00`;
+              const endTimeStr = `${(h + 1).toString().padStart(2, "0")}:00:00`;
+              
+              let basePrice;
+              if (h < 12) {
+                basePrice = (court.price_morning !== null && court.price_morning !== undefined) 
+                  ? court.price_morning : venue.default_price_morning;
+              } else if (h >= 17) {
+                basePrice = (court.price_evening !== null && court.price_evening !== undefined) 
+                  ? court.price_evening : venue.default_price_evening;
+              } else {
+                basePrice = venue.default_price_afternoon;
+              }
+
+              const surcharge = isWeekend ? parseFloat(venue.default_price_weekend_surcharge || 0) : 0;
+              const finalPrice = Math.round(parseFloat(basePrice) * (1 + surcharge / 100));
+
+              slotsToCreate.push({
+                court_id: court.id,
+                venue_id: venue.id,
+                date,
+                start_time: startTimeStr,
+                end_time: endTimeStr,
+                price: finalPrice,
+                status: court.status === 'maintenance' ? 'maintenance' : 'available',
+              });
+            }
+          }
+        }
+
+        if (slotsToCreate.length > 0) {
+          console.log(`Syncing: Creating ${slotsToCreate.length} missing slots for ${date}`);
+          await db.TimeSlot.bulkCreate(slotsToCreate, { transaction: t });
+        }
+        await t.commit();
+      } catch (genErr) {
+        await t.rollback();
+        console.error("Error syncing slots:", genErr);
+      }
+    }
+
+    // 4. Fetch all slots (newly created or existing)
+    // Lọc lại lần cuối để chỉ lấy trong khung giờ hoạt động hiện tại (xử lý khi chủ sân thu hẹp giờ)
+    const startHourStr = venue.open_time || '06:00:00';
+    const endHourStr = venue.close_time || '22:00:00';
+
+    const slots = await db.TimeSlot.findAll({
+      where: { 
+        court_id: { [Op.in]: courtIds }, 
+        date,
+        start_time: { [Op.gte]: startHourStr },
+        end_time: { [Op.lte]: endHourStr }
+      },
+      include: [{ model: db.Court, as: "court", attributes: ["id", "name", "type", "status"] }],
+      order: [["start_time", "ASC"]],
+    });
+    
+    // 5. Format response để dễ sử dụng
+    const formattedSlots = slots.map(slot => ({
+      id: slot.id,
+      court_id: slot.court_id,
+      court_name: slot.court?.name,
+      court_type: slot.court?.type,
+      court_status: slot.court?.status,
+      start_time: slot.start_time,
+      end_time: slot.end_time,
+      price: slot.price,
+      status: slot.status, // available, booked, maintenance
+      is_bookable: slot.status === 'available' && slot.court?.status === 'active'
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        venue: {
+          id: venue.id,
+          name: venue.name,
+          slug: venue.slug,
+          address: venue.address,
+          open_time: venue.open_time || '06:00',
+          close_time: venue.close_time || '22:00',
+        },
+        date,
+        is_past_date: isPastDate,
+        slots: formattedSlots,
+        summary: {
+          total_slots: formattedSlots.length,
+          available_slots: formattedSlots.filter(s => s.is_bookable).length,
+          booked_slots: formattedSlots.filter(s => s.status === 'booked').length,
+          maintenance_slots: formattedSlots.filter(s => s.status === 'maintenance').length,
+        }
+      },
+    });
   } catch (err) {
     next(err);
   }

@@ -232,8 +232,33 @@ const updateVenue = async (req, res, next) => {
   try {
     const venue = await db.Venue.findOne({
       where: { id: req.params.id, owner_id: req.user.id },
+      include: [{ model: db.Court, as: 'courts', attributes: ['id'] }]
     });
     if (!venue) throw new ApiError(404, 'Không tìm thấy địa điểm hoặc bạn không có quyền');
+
+    const { open_time, close_time } = req.body;
+
+    // Safety Check: If shrinking hours, verify no future bookings exist in truncated slots
+    if ((open_time && open_time > venue.open_time) || (close_time && close_time < venue.close_time)) {
+      const today = new Date().toISOString().split('T')[0];
+      const courtIds = venue.courts.map(c => c.id);
+
+      const overlapBookings = await db.TimeSlot.findOne({
+        where: {
+          court_id: { [Op.in]: courtIds },
+          date: { [Op.gte]: today },
+          status: 'booked',
+          [Op.or]: [
+            open_time && open_time > venue.open_time ? { start_time: { [Op.lt]: open_time } } : null,
+            close_time && close_time < venue.close_time ? { start_time: { [Op.gte]: close_time } } : null
+          ].filter(Boolean)
+        }
+      });
+
+      if (overlapBookings) {
+        throw new ApiError(400, `Không thể thu hẹp giờ hoạt động vì đã có lịch đặt sân tại khung giờ ${overlapBookings.start_time.slice(0, 5)} trong tương lai.`);
+      }
+    }
 
     // Don't allow owner to change status (admin sets that)
     const { status, owner_id, ...updateData } = req.body;
