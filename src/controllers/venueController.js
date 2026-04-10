@@ -178,8 +178,9 @@ const createVenue = async (req, res, next) => {
       province_id, ward_id,
     } = req.body;
 
-    // Generate slug from name
-    const slug = `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
+    // Get default commission rate for initial setup
+    const platformSetting = await db.PlatformSetting.findOne({ where: { key: 'default_commission_rate' } });
+    const defaultRate = parseFloat(platformSetting?.value || 0);
 
     const venue = await db.Venue.create({
       owner_id: req.user.id,
@@ -195,6 +196,7 @@ const createVenue = async (req, res, next) => {
       cancel_policy: cancel_policy || null,
       status: 'pending_review', // Must be approved by admin
       province_id, ward_id,
+      commission_rate: defaultRate,
     });
 
     res.status(201).json({

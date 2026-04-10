@@ -3,6 +3,12 @@ const { ApiError } = require("../middleware/errorMiddleware");
 const { Op } = require("sequelize");
 const qrcode = require("qrcode");
 
+const getCommissionRate = async (venue) => {
+  const platformSetting = await db.PlatformSetting.findOne({ where: { key: "default_commission_rate" } });
+  const defaultRate = parseFloat(platformSetting?.value || 0);
+  return venue.commission_rate > 0 ? venue.commission_rate : defaultRate;
+};
+
 /**
  * GET /api/bookings/availability?court_id=&date=
  * Returns time slots for a court on a specific date
@@ -285,9 +291,7 @@ const createBooking = async (req, res, next) => {
     const qrCodeBase64 = await qrcode.toDataURL(qrData);
 
     const venue = slots[0].venue;
-    const platformSetting = await db.PlatformSetting.findOne({ where: { key: "default_commission_rate" } });
-    const defaultRate = parseFloat(platformSetting?.value || 0);
-    const rate = venue.commission_rate > 0 ? venue.commission_rate : defaultRate;
+    const rate = await getCommissionRate(venue);
 
     // Tính toán tài chính dựa trên loại phiếu giảm giá
     let commissionAmount = 0;
@@ -551,9 +555,7 @@ const createWalkInBooking = async (req, res, next) => {
     if (slots.length === 0) throw new ApiError(404, "Không tìm thấy khung giờ");
 
     const venue = slots[0].venue;
-    const platformSetting = await db.PlatformSetting.findOne({ where: { key: "default_commission_rate" } });
-    const defaultRate = parseFloat(platformSetting?.value || 0);
-    const rate = venue.commission_rate > 0 ? venue.commission_rate : defaultRate;
+    const rate = await getCommissionRate(venue);
 
     const bookingCode = `WI${Date.now().toString().slice(-8)}`;
     const totalPrice = slots.reduce((sum, s) => sum + parseFloat(s.price), 0);
