@@ -65,6 +65,11 @@ io.on('connection', (socket) => {
     console.log(`🏢 Owner/Staff joined venue: ${venueId}`);
   });
 
+  socket.on('join-user', (userId) => {
+    socket.join(`user-${userId}`);
+    console.log(`👤 User joined private room: ${userId}`);
+  });
+
   socket.on('join-admin', () => {
     socket.join('admin-room');
     console.log('🛡️ Admin joined portal');

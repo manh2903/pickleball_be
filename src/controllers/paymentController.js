@@ -82,6 +82,7 @@ const vnpayIPN = async (req, res, next) => {
   }
 };
 
+const { sendNotification } = require("../services/notificationService");
 const { sendEmail } = require("../utils/mailer");
 
 async function handlePaymentSuccess(req, bookingId, transactionId) {
@@ -115,15 +116,34 @@ async function handlePaymentSuccess(req, bookingId, transactionId) {
 
   // 3. Update Owner's Wallet (Tier 1)
   const venue = await db.Venue.findByPk(booking.venue_id);
+  const io = req.app.get("io");
+
   if (venue) {
     const owner = await db.User.findByPk(venue.owner_id);
     if (owner && booking.owner_revenue > 0) {
       await owner.increment("wallet_balance", { by: booking.owner_revenue });
+      
+      // Notify Owner
+      await sendNotification(io, {
+        userId: owner.id,
+        type: 'booking_confirmed',
+        title: '🔔 Đơn đặt sân mới',
+        body: `Cơ sở của bạn đã có đơn đặt sân mới (${booking.booking_code}). Số tiền đã được cộng vào ví.`,
+        data: { booking_id: booking.id }
+      });
     }
   }
 
-  // Socket notifications
-  const io = req.app.get("io");
+  // Notify Admin
+  await sendNotification(io, {
+    userId: 1, // Default admin id or fetch all admins
+    type: 'payment_received',
+    title: '💰 Giao dịch mới thành công',
+    body: `Thanh toán thành công ${booking.total_price.toLocaleString()} VNĐ cho đơn ${booking.booking_code}.`,
+    data: { booking_id: booking.id }
+  });
+
+  // Legacy Socket notifications
   io?.to(`venue-${booking.venue_id}`).emit("booking-status-updated", { id: booking.id, status: "paid" });
   io?.to("admin-room").emit("booking-status-updated", { id: booking.id, status: "paid" });
 

@@ -1,5 +1,7 @@
 const db = require('../models');
 const { ApiError } = require('../middleware/errorMiddleware');
+const { sendNotification } = require('../services/notificationService');
+const { sendEmail } = require('../utils/mailer');
 
 /**
  * Withdrawal Controller — Handling financial payouts
@@ -36,6 +38,17 @@ const withdrawalController = {
         }, { transaction: t });
 
         await t.commit();
+
+        // Notify Admin
+        const io = req.app.get('io');
+        await sendNotification(io, {
+          userId: 1, // Default admin
+          type: 'withdrawal_requested',
+          title: '💸 Yêu cầu rút tiền mới',
+          body: `Chủ sân ${req.user.name} yêu cầu rút ${parseInt(amount).toLocaleString()} VNĐ.`,
+          data: { request_id: request.id }
+        });
+
         res.status(201).json({ success: true, message: 'Gửi yêu cầu rút tiền thành công', data: request });
       } catch (err) {
         await t.rollback();
@@ -145,6 +158,23 @@ const withdrawalController = {
           note: note || request.note
         });
       }
+
+      // 1. Notify Owner of the decision
+      const io = req.app.get('io');
+      const isApproved = status === 'completed' || status === 'approved';
+      const notificationType = isApproved ? 'withdrawal_approved' : 'withdrawal_rejected';
+      const title = isApproved ? '✅ Rút tiền thành công' : '❌ Rút tiền bị từ chối';
+      const body = isApproved 
+        ? `Yêu cầu rút tiền #${request.id} của bạn đã được duyệt. Số tiền: ${request.amount.toLocaleString()} VNĐ.`
+        : `Yêu cầu rút tiền #${request.id} của bạn đã bị từ chối. Lý do: ${reject_reason || 'Không có'}.`;
+
+      await sendNotification(io, {
+        userId: request.owner_id,
+        type: notificationType,
+        title: title,
+        body: body,
+        data: { request_id: request.id }
+      });
 
       res.json({ success: true, message: 'Cập nhật yêu cầu thanh toán thành công' });
     } catch (err) {

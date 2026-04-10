@@ -17,6 +17,7 @@ const Notification = sequelize.define('Notification', {
     type: DataTypes.ENUM(
       'booking_confirmed', 'booking_cancelled', 'booking_reminder',
       'payment_received', 'payment_refund', 'promotion', 'court_maintenance',
+      'withdrawal_requested', 'withdrawal_approved', 'withdrawal_rejected',
       'general'
     ),
     allowNull: false,
