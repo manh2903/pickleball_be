@@ -322,27 +322,12 @@ const createBooking = async (req, res, next) => {
 
     await t.commit();
 
-    // Notify user if email exists
+    // Notify user if email exists (Move this logic to ONLY after payment or confirmed cash)
+    /*
     if (user.email) {
-      sendEmail({
-        to: user.email,
-        subject: `🎫 Đặt sân thành công: ${bookingCode} - Pickleball Hub`,
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-            <h2 style="color: #059669;">Đặt sân thành công!</h2>
-            <p>Chào <strong>${user.name}</strong>, đơn đặt sân của bạn tại <strong>${venue.name}</strong> đã được ghi nhận.</p>
-            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p>Mã đơn hàng: <strong>${bookingCode}</strong></p>
-              <p>Tổng tiền: <strong>${new Intl.NumberFormat('vi-VN').format(totalPrice)}đ</strong></p>
-              <p>Phương thức: <strong>${payment_method === 'vnpay' ? 'VNPay (Đang chờ thanh toán)' : 'Tiền mặt tại quầy'}</strong></p>
-            </div>
-            <p>Vui lòng xuất trình mã QR trong ứng dụng khi đến sân để check-in.</p>
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-            <p style="font-size: 0.85em; color: #64748b;">Trân trọng, đội ngũ Pickleball Hub.</p>
-          </div>
-        `
-      }).catch(e => console.error('Booking Email failed', e));
+      sendEmail({ ... }).catch((e) => console.error("Booking Email failed", e));
     }
+    */
 
     let paymentUrl = null;
     if (payment_method === 'vnpay') {
@@ -456,7 +441,8 @@ const getMyBookings = async (req, res, next) => {
 const getBookingById = async (req, res, next) => {
   try {
     const idOrCode = req.params.id;
-    const isCode = isNaN(Number(idOrCode));
+    // Stronger detection: If it starts with PB or WI, it's definitely a code
+    const isCode = typeof idOrCode === 'string' && (idOrCode.startsWith('PB') || idOrCode.startsWith('WI') || isNaN(Number(idOrCode)));
     const where = isCode ? { booking_code: idOrCode } : { id: idOrCode };
 
     const booking = await db.Booking.findOne({
@@ -480,12 +466,12 @@ const getBookingById = async (req, res, next) => {
     const isStaff = req.user?.role === 'staff';
 
     if (!isUser && !isOwner && !isAdmin && !isStaff) {
-       console.log('❌ Privacy Check Failed:', { 
-         booking_user: booking.user_id, 
-         req_user: req.user?.id,
-         role: req.user?.role 
-       });
-       throw new ApiError(403, 'Bạn không có quyền truy cập thông tin này');
+       console.log('❌ Privacy Check Failed for Booking:', booking.booking_code);
+       console.log('--- Booking User ID:', booking.user_id);
+       console.log('--- Request User ID:', req.user?.id);
+       console.log('--- Request User Role:', req.user?.role);
+       
+       throw new ApiError(403, 'Bạn không có quyền truy cập thông tin lượt đặt này.');
     }
 
     res.json({ success: true, data: booking });

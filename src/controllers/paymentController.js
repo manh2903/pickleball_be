@@ -94,6 +94,12 @@ async function handlePaymentSuccess(req, bookingId, transactionId) {
   });
   if (!booking) return;
 
+  // Anti-duplicate: If already paid, don't process again
+  if (booking.payment_status === 'paid') {
+    console.log(`Payment for booking ${bookingId} already processed.`);
+    return;
+  }
+
   // 1. Update Booking
   await booking.update({ payment_status: 'paid', status: 'confirmed' });
 
