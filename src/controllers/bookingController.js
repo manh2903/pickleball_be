@@ -805,25 +805,58 @@ const ownerGetBookingDetail = async (req, res, next) => {
 
 const getAllBookings = async (req, res, next) => {
   try {
-    const { status, page = 1, limit = 20 } = req.query;
+    const { status, payment_status, booking_type, search, page = 1, limit = 20 } = req.query;
     const where = {};
-    if (status) where.status = status;
+
+    if (status && status !== "all") where.status = status;
+    if (payment_status && payment_status !== "all") where.payment_status = payment_status;
+    if (booking_type && booking_type !== "all") where.booking_type = booking_type;
+
+    if (search) {
+      where[Op.or] = [
+        { booking_code: { [Op.like]: `%${search}%` } },
+        { customer_name: { [Op.like]: `%${search}%` } },
+        { customer_phone: { [Op.like]: `%${search}%` } },
+        { customer_email: { [Op.like]: `%${search}%` } },
+        { "$user.name$": { [Op.like]: `%${search}%` } },
+        { "$user.phone$": { [Op.like]: `%${search}%` } },
+        { "$venue.name$": { [Op.like]: `%${search}%` } },
+      ];
+    }
+
     const { count, rows } = await db.Booking.findAndCountAll({
       where,
       include: [
         {
           model: db.TimeSlot,
           as: "slots",
-          include: [{ model: db.Court, as: "court", attributes: ["name"] }],
+          attributes: ["date", "start_time", "end_time"],
+          include: [{ model: db.Court, as: "court", attributes: ["id", "name"] }],
         },
-        { model: db.User, as: "user", attributes: ["name", "phone"] },
+        { model: db.User, as: "user", attributes: ["id", "name", "phone", "email"] },
+        {
+          model: db.Venue,
+          as: "venue",
+          attributes: ["id", "name"],
+          include: [{ model: db.User, as: "owner", attributes: ["id", "name"] }],
+        },
       ],
       order: [["created_at", "DESC"]],
       limit: parseInt(limit),
       offset: (parseInt(page) - 1) * parseInt(limit),
       distinct: true,
+      subQuery: false,
     });
-    res.json({ success: true, data: { bookings: rows, total: count } });
+
+    res.json({
+      success: true,
+      data: {
+        bookings: rows,
+        total: count,
+        page: parseInt(page),
+        totalPages: Math.ceil(count / parseInt(limit)),
+      },
+    });
   } catch (err) {
     next(err);
   }

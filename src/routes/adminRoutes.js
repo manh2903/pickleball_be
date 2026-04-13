@@ -9,6 +9,8 @@ const {
 const {
   adminGetStats, adminGetUsers, adminUpdateUserStatus
 } = require('../controllers/adminController');
+const { getAllBookings } = require('../controllers/bookingController');
+const { adminGetAllIncidents, adminUpdateIncidentStatus } = require('../controllers/incidentController');
 
 const  {
   adminGetSettings, adminUpdateSetting
@@ -28,6 +30,13 @@ router.put('/venues/:id/commission', adminSetCommission);
 // === Users management ===
 router.get('/users', adminGetUsers);
 router.put('/users/:id/status', adminUpdateUserStatus);
+
+// === Bookings management ===
+router.get('/bookings', getAllBookings);
+
+// === Incidents management ===
+router.get('/incidents', adminGetAllIncidents);
+router.put('/incidents/:id/status', adminUpdateIncidentStatus);
 
 // === Platform Settings ===
 router.get('/settings', adminGetSettings);

@@ -108,6 +108,84 @@ const incidentController = {
     } catch (err) {
       next(err);
     }
+  },
+
+  // Admin: List incidents across the whole platform
+  adminGetAllIncidents: async (req, res, next) => {
+    try {
+      const { status, severity, search, page = 1, limit = 20 } = req.query;
+      const where = {};
+
+      if (status && status !== 'all') where.status = status;
+      if (severity && severity !== 'all') where.severity = severity;
+      if (search) {
+        const { Op } = require('sequelize');
+        where[Op.or] = [
+          { title: { [Op.like]: `%${search}%` } },
+          { description: { [Op.like]: `%${search}%` } },
+          { '$venue.name$': { [Op.like]: `%${search}%` } },
+          { '$reporter.name$': { [Op.like]: `%${search}%` } },
+        ];
+      }
+
+      const { count, rows } = await db.Incident.findAndCountAll({
+        where,
+        include: [
+          { model: db.User, as: 'reporter', attributes: ['id', 'name', 'email'] },
+          { model: db.User, as: 'resolver', attributes: ['id', 'name'], required: false },
+          { model: db.Court, as: 'court', attributes: ['id', 'name'], required: false },
+          {
+            model: db.Venue,
+            as: 'venue',
+            attributes: ['id', 'name'],
+            include: [{ model: db.User, as: 'owner', attributes: ['id', 'name'] }]
+          }
+        ],
+        order: [['created_at', 'DESC']],
+        limit: parseInt(limit),
+        offset: (parseInt(page) - 1) * parseInt(limit),
+        distinct: true,
+        subQuery: false,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          incidents: rows,
+          total: count,
+          page: parseInt(page),
+          totalPages: Math.ceil(count / parseInt(limit)),
+        }
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  // Admin: Update incident status across the whole platform
+  adminUpdateIncidentStatus: async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { status, resolution_notes } = req.body;
+
+      const incident = await db.Incident.findByPk(id);
+      if (!incident) throw new ApiError(404, 'Không tìm thấy báo cáo sự cố');
+
+      const updateData = { status };
+      if (status === 'resolved' || status === 'closed') {
+        updateData.resolved_by = req.user.id;
+        updateData.resolved_at = new Date();
+        updateData.resolution_notes = resolution_notes;
+      } else if (resolution_notes !== undefined) {
+        updateData.resolution_notes = resolution_notes;
+      }
+
+      await incident.update(updateData);
+
+      res.json({ success: true, message: 'Admin đã cập nhật trạng thái sự cố thành công', data: incident });
+    } catch (err) {
+      next(err);
+    }
   }
 };
 

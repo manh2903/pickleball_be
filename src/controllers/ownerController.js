@@ -64,7 +64,25 @@ const getStats = async (req, res, next) => {
       where: { venue_id: { [Op.in]: venueIds } }
     });
 
-    // 5. Recent Bookings (last 5)
+    // 5. Pending / Action needed bookings
+    const pendingBookings = await db.Booking.count({
+      where: { 
+        venue_id: { [Op.in]: venueIds },
+        status: { [Op.in]: ['pending', 'confirmed'] },
+        payment_status: { [Op.ne]: 'paid' }
+      }
+    });
+
+    // 6. Walk-in count (All time or today? Dashboard implies a general count, but let's do all-time non-cancelled)
+    const walkInCount = await db.Booking.count({
+      where: { 
+        venue_id: { [Op.in]: venueIds },
+        booking_type: 'walkin',
+        status: { [Op.ne]: 'cancelled' }
+      }
+    });
+
+    // 7. Recent Bookings (last 5)
     const recentBookings = await db.Booking.findAll({
       where: { venue_id: { [Op.in]: venueIds } },
       include: [
@@ -80,14 +98,14 @@ const getStats = async (req, res, next) => {
       limit: 5
     });
 
-    // 6. Revenue for last 7 days
+    // 8. Revenue for last 7 days
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
     const revenueByDay = await db.Booking.findAll({
       attributes: [
         [db.sequelize.fn('DATE', db.sequelize.col('created_at')), 'date'],
-        [db.sequelize.fn('SUM', db.sequelize.col('total_price')), 'revenue']
+        [db.sequelize.fn('SUM', db.sequelize.col('owner_revenue')), 'revenue']
       ],
       where: {
         venue_id: { [Op.in]: venueIds },
@@ -105,6 +123,8 @@ const getStats = async (req, res, next) => {
         totalBookings,
         totalRevenue: totalRevenueResult || 0,
         todayBookings,
+        pendingBookings,
+        walkInCount,
         recentBookings,
         revenueByDay: revenueByDay.map(r => ({
           date: r.get('date'),
