@@ -18,6 +18,8 @@ const WithdrawalRequest = require('./WithdrawalRequest');
 const PlatformSetting = require('./PlatformSetting');
 const Province = require('./Province');
 const Ward = require('./Ward');
+const SubscriptionPlan = require('./SubscriptionPlan');
+const OwnerSubscription = require('./OwnerSubscription');
 
 // ====================================================================
 // ASSOCIATIONS
@@ -32,6 +34,7 @@ User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
 User.hasMany(Shift, { foreignKey: 'staff_id', as: 'shifts' });           // staff shifts
 User.hasMany(Incident, { foreignKey: 'reported_by', as: 'reportedIncidents' });
 User.hasMany(WithdrawalRequest, { foreignKey: 'owner_id', as: 'withdrawals' });
+User.hasMany(OwnerSubscription, { foreignKey: 'owner_id', as: 'subscriptions' });           // owner → subscriptions
 
 // ---- Venue (Tier 2 - Địa điểm) ----
 Venue.belongsTo(User, { foreignKey: 'owner_id', as: 'owner' });
@@ -104,6 +107,11 @@ WithdrawalRequest.belongsTo(User, { foreignKey: 'processed_by', as: 'processor' 
 Province.hasMany(Ward, { foreignKey: 'province_ma', as: 'wards' });
 Ward.belongsTo(Province, { foreignKey: 'province_ma', as: 'province' });
 
+// ---- Subscription ----
+OwnerSubscription.belongsTo(User, { foreignKey: 'owner_id', as: 'owner' });
+OwnerSubscription.belongsTo(SubscriptionPlan, { foreignKey: 'plan_id', as: 'plan' });
+SubscriptionPlan.hasMany(OwnerSubscription, { foreignKey: 'plan_id', as: 'subscriptions' });
+
 // Venue location relationships
 Venue.belongsTo(Province, { foreignKey: 'province_id', as: 'provinceState' });
 Venue.belongsTo(Ward, { foreignKey: 'ward_id', as: 'wardState' });
@@ -130,6 +138,8 @@ const db = {
   PlatformSetting,
   Province,
   Ward,
+  SubscriptionPlan,
+  OwnerSubscription,
 };
 
 module.exports = db;

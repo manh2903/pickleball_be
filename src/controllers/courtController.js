@@ -91,12 +91,20 @@ const ownerGetCourts = async (req, res, next) => {
   }
 };
 
+const { canCreateCourt } = require('../utils/subscriptionHelper');
+
 /**
  * POST /api/owner/venues/:venueId/courts — Create court in owner's venue
  */
 const createCourt = async (req, res, next) => {
   try {
     const venue = await assertOwnsVenue(req.user.id, req.params.venueId);
+    
+    const allowed = await canCreateCourt(req.user.id, venue.id);
+    if (!allowed) {
+      throw new ApiError(403, 'Bạn đã đạt giới hạn số lượng sân tối đa cho mỗi cơ sở trong gói hiện tại. Vui lòng nâng cấp gói dịch vụ để thêm sân.');
+    }
+
     const {
       name, type, description, amenities, images,
       price_morning, price_afternoon, price_evening,

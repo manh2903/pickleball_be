@@ -72,22 +72,6 @@ const Booking = sequelize.define('Booking', {
     type: DataTypes.DECIMAL(12, 0),
     defaultValue: 0,
   },
-  // Platform commission
-  commission_rate: {
-    type: DataTypes.DECIMAL(5, 2),
-    defaultValue: 0,
-    comment: 'Platform commission % applied at booking time (snapshot)',
-  },
-  commission_amount: {
-    type: DataTypes.DECIMAL(12, 0),
-    defaultValue: 0,
-    comment: 'Actual commission amount deducted from owner revenue',
-  },
-  owner_revenue: {
-    type: DataTypes.DECIMAL(12, 0),
-    defaultValue: 0,
-    comment: 'total_price - commission_amount — credited to owner wallet on completion',
-  },
   // QR check-in
   qr_code: {
     type: DataTypes.TEXT,

@@ -8,7 +8,7 @@ const getPublicSettings = async (req, res, next) => {
   try {
     const settings = await db.PlatformSetting.findAll({
       where: {
-        key: ['default_commission_rate', 'hotline_support', 'site_name']
+        key: ['hotline_support', 'site_name']
       }
     });
 

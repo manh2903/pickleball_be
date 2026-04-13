@@ -87,7 +87,7 @@ const getStats = async (req, res, next) => {
     const revenueByDay = await db.Booking.findAll({
       attributes: [
         [db.sequelize.fn('DATE', db.sequelize.col('created_at')), 'date'],
-        [db.sequelize.fn('SUM', db.sequelize.col('owner_revenue')), 'revenue']
+        [db.sequelize.fn('SUM', db.sequelize.col('total_price')), 'revenue']
       ],
       where: {
         venue_id: { [Op.in]: venueIds },

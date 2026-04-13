@@ -3,12 +3,6 @@ const { ApiError } = require("../middleware/errorMiddleware");
 const { Op } = require("sequelize");
 const qrcode = require("qrcode");
 
-const getCommissionRate = async (venue) => {
-  const platformSetting = await db.PlatformSetting.findOne({ where: { key: "default_commission_rate" } });
-  const defaultRate = parseFloat(platformSetting?.value || 0);
-  return venue.commission_rate > 0 ? venue.commission_rate : defaultRate;
-};
-
 /**
  * GET /api/bookings/availability?court_id=&date=
  * Returns time slots for a court on a specific date
@@ -290,24 +284,8 @@ const createBooking = async (req, res, next) => {
     const qrData = JSON.stringify({ code: bookingCode, slot_ids: ids, user_id: user.id });
     const qrCodeBase64 = await qrcode.toDataURL(qrData);
 
+    // Financial calculation - NO COMMISSION (Subscription model)
     const venue = slots[0].venue;
-    const rate = await getCommissionRate(venue);
-
-    // Tính toán tài chính dựa trên loại phiếu giảm giá
-    let commissionAmount = 0;
-    let ownerRevenue = 0;
-
-    if (couponId && couponType === "platform") {
-      // Nền tảng trả tiền cho khoản giảm giá: Chủ sở hữu nhận được doanh thu dựa trên giá GỐC.
-      const originalCommission = Math.round((originalTotalPrice * rate) / 100);
-      ownerRevenue = originalTotalPrice - originalCommission;
-      // Lợi nhuận của Admin giảm đi discountAmount
-      commissionAmount = originalCommission - discountAmount;
-    } else {
-      // Chủ sở hữu trả tiền hoặc không có phiếu giảm giá: Chủ sở hữu nhận được doanh thu dựa trên giá CUỐI CÙNG
-      commissionAmount = Math.round((totalPrice * rate) / 100);
-      ownerRevenue = totalPrice - commissionAmount;
-    }
 
     const { customer_name, customer_phone, customer_email } = req.body;
 
@@ -327,9 +305,6 @@ const createBooking = async (req, res, next) => {
         payment_method: payment_method,
         coupon_id: couponId,
         discount_amount: discountAmount,
-        commission_rate: rate,
-        commission_amount: commissionAmount,
-        owner_revenue: ownerRevenue,
         qr_code: qrCodeBase64,
         notes,
       },
@@ -406,9 +381,9 @@ const confirmPayment = async (req, res, next) => {
       { transaction: t },
     );
 
-    if (booking.owner_revenue > 0) {
+    if (booking.total_price > 0) {
       const owner = await db.User.findByPk(venue.owner_id, { transaction: t });
-      if (owner) await owner.increment("wallet_balance", { by: booking.owner_revenue, transaction: t });
+      if (owner) await owner.increment("wallet_balance", { by: booking.total_price, transaction: t });
     }
 
     await t.commit();
@@ -555,12 +530,8 @@ const createWalkInBooking = async (req, res, next) => {
     if (slots.length === 0) throw new ApiError(404, "Không tìm thấy khung giờ");
 
     const venue = slots[0].venue;
-    const rate = await getCommissionRate(venue);
-
     const bookingCode = `WI${Date.now().toString().slice(-8)}`;
     const totalPrice = slots.reduce((sum, s) => sum + parseFloat(s.price), 0);
-    const commissionAmount = Math.round((totalPrice * rate) / 100);
-    const ownerRevenue = totalPrice - commissionAmount;
 
     const booking = await db.Booking.create(
       {
@@ -574,9 +545,6 @@ const createWalkInBooking = async (req, res, next) => {
         total_price: totalPrice,
         payment_status: "unpaid",
         payment_method: "cash",
-        commission_rate: rate,
-        commission_amount: commissionAmount,
-        owner_revenue: ownerRevenue,
         notes,
       },
       { transaction: t },

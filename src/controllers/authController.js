@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+const { User, SubscriptionPlan, OwnerSubscription } = require('../models');
 const { ApiError } = require('../middleware/errorMiddleware');
 
 const generateTokens = (user) => {
@@ -64,6 +64,10 @@ const register = async (req, res, next) => {
  * POST /api/auth/register-owner
  * Register as owner — creates account with owner_status: 'pending' (awaits admin approval)
  */
+/**
+ * POST /api/auth/register-owner
+ * Register as owner — creates account with owner_status: 'approved'
+ */
 const registerOwner = async (req, res, next) => {
   try {
     const { name, email, phone, password } = req.body;
@@ -76,8 +80,24 @@ const registerOwner = async (req, res, next) => {
       name, email, phone,
       password_hash: passwordHash,
       role: 'owner',
-      owner_status: 'approved', // Auto-approved for now as per simplified flow
+      owner_status: 'approved', 
     });
+
+    // Auto-assign FREE subscription plan
+    const freePlan = await SubscriptionPlan.findOne({ where: { price: 0 } });
+    if (freePlan) {
+      const duration = freePlan.duration_months || 12;
+      const endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + duration);
+
+      await OwnerSubscription.create({
+        owner_id: user.id,
+        plan_id: freePlan.id,
+        start_date: new Date(),
+        end_date: endDate,
+        status: 'active'
+      });
+    }
 
     res.status(201).json({
       success: true,

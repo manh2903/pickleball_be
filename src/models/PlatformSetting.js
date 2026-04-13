@@ -15,7 +15,7 @@ const PlatformSetting = sequelize.define('PlatformSetting', {
     type: DataTypes.STRING(100),
     allowNull: false,
     unique: true,
-    comment: 'Setting key e.g. "default_commission_rate", "refund_policy"',
+    comment: 'Setting key e.g. "hotline_support", "site_name", "refund_policy"',
   },
   value: {
     type: DataTypes.TEXT,

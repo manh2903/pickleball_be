@@ -17,6 +17,7 @@ const withdrawalRoutes = require('./withdrawalRoutes');
 const locationRoutes = require('./locationRoutes');
 const couponRoutes = require('./couponRoutes');
 const systemRoutes = require('./systemRoutes');
+const subscriptionRoutes = require('./subscriptionRoutes');
 
 // Public routes
 router.use('/auth', authRoutes);
@@ -29,6 +30,7 @@ router.use('/withdrawals', withdrawalRoutes);
 router.use('/locations', locationRoutes);
 router.use('/coupons', couponRoutes);
 router.use('/system', systemRoutes);
+router.use('/subscriptions', subscriptionRoutes);
 
 // Protected routes
 router.use('/user', userRoutes);

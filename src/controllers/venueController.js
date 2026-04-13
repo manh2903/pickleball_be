@@ -164,6 +164,8 @@ const getOwnerVenues = async (req, res, next) => {
   }
 };
 
+const { canCreateVenue } = require('../utils/subscriptionHelper');
+
 /**
  * POST /api/owner/venues — Create venue
  */
@@ -178,9 +180,13 @@ const createVenue = async (req, res, next) => {
       province_id, ward_id,
     } = req.body;
 
-    // Get default commission rate for initial setup
-    const platformSetting = await db.PlatformSetting.findOne({ where: { key: 'default_commission_rate' } });
-    const defaultRate = parseFloat(platformSetting?.value || 0);
+    const allowed = await canCreateVenue(req.user.id);
+    if (!allowed) {
+      throw new ApiError(403, 'Bạn đã đạt giới hạn số lượng cơ sở tối đa cho gói hiện tại. Vui lòng nâng cấp gói dịch vụ để tạo thêm cơ sở.');
+    }
+
+    // Generate slug from name
+    const slug = name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') + '-' + Date.now().toString().slice(-4);
 
     const venue = await db.Venue.create({
       owner_id: req.user.id,
@@ -194,9 +200,8 @@ const createVenue = async (req, res, next) => {
       default_price_evening: default_price_evening || 0,
       default_price_weekend_surcharge: default_price_weekend_surcharge || 0,
       cancel_policy: cancel_policy || null,
-      status: 'pending_review', // Must be approved by admin
+      status: 'active', // Auto-active because capacity is limited by subscription
       province_id, ward_id,
-      commission_rate: defaultRate,
     });
 
     res.status(201).json({

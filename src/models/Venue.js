@@ -145,11 +145,6 @@ const Venue = sequelize.define('Venue', {
     defaultValue: 'pending_review',
     comment: 'Admin approves pending_review venues before they go live',
   },
-  commission_rate: {
-    type: DataTypes.DECIMAL(5, 2),
-    defaultValue: 0,
-    comment: 'Override commission rate for this venue (0 = use platform default)',
-  },
   sort_order: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
