@@ -71,7 +71,8 @@ const withdrawalController = {
             type: 'withdrawal_requested',
             title: '💸 Yêu cầu rút tiền mới',
             body: `Chủ sân ${req.user.name} yêu cầu rút ${parseInt(amount).toLocaleString()} VNĐ.`,
-            data: { request_id: request.id }
+            data: { request_id: request.id },
+            broadcastToAdmin: false // We only want to save record and send to individual user room
           });
         }
 

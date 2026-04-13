@@ -9,8 +9,9 @@ const { Notification } = require('../models');
  * @param {string} params.title - Title
  * @param {string} params.body - Detailed message
  * @param {Object} [params.data] - Extra JSON data
+ * @param {boolean} [params.broadcastToAdmin] - Whether to emit to entire admin room
  */
-const sendNotification = async (io, { userId, type, title, body, data = {} }) => {
+const sendNotification = async (io, { userId, type, title, body, data = {}, broadcastToAdmin = false }) => {
   try {
     // 1. Save to Database
     const notification = await Notification.create({
@@ -23,13 +24,12 @@ const sendNotification = async (io, { userId, type, title, body, data = {} }) =>
 
     // 2. Emit via Socket.io
     if (io) {
-      // Direct emit to the user's specific room if they are online
-      // We'll use a room named 'user-<userId>'
-      io.to(`user-${userId}`).emit('new-notification', notification);
-      
-      // Also emit to admin room if this is an admin-relevant event
-      if (type === 'withdrawal_requested' || type === 'booking_confirmed') {
+      if (broadcastToAdmin) {
+        // Emit once to all admins
         io.to('admin-room').emit('new-notification', notification);
+      } else {
+        // Direct emit to the user's specific room
+        io.to(`user-${userId}`).emit('new-notification', notification);
       }
     }
 
