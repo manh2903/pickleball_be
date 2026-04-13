@@ -7,27 +7,44 @@ const { Op } = require("sequelize");
  */
 const adminGetStats = async (req, res, next) => {
   try {
-    const totalRevenue = await db.Booking.sum("total_price", {
+    // 1. Total Booking Revenue (Gross Volume across all venues)
+    const totalVolume = await db.Booking.sum("total_price", {
       where: { status: { [Op.ne]: "cancelled" }, payment_status: "paid" },
     });
+
+    // 2. Actual Platform Revenue (Subscriptions)
+    const subscriptionRevenue = await db.Payment.sum("amount", {
+      where: { payment_type: "subscription", status: "completed" }
+    });
+
     const activeVenues = await db.Venue.count({ where: { status: "active" } });
     const totalBookings = await db.Booking.count({
       where: { status: { [Op.ne]: "cancelled" } },
     });
+
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const newUsers = await db.User.count({
       where: { role: "user", created_at: { [Op.gte]: thirtyDaysAgo } },
     });
+
     const recentVenues = await db.Venue.findAll({
       where: { status: "pending_review" },
       include: [{ model: db.User, as: "owner", attributes: ["id", "name", "email"] }],
-      limit: 5, order: [["created_at", "DESC"]],
+      limit: 5,
+      order: [["created_at", "DESC"]],
     });
 
     res.json({
       success: true,
-      data: { totalRevenue: totalRevenue || 0, activeVenues, totalBookings, newUsers, recentVenues },
+      data: { 
+        totalVolume: totalVolume || 0, 
+        subscriptionRevenue: subscriptionRevenue || 0,
+        activeVenues, 
+        totalBookings, 
+        newUsers, 
+        recentVenues 
+      },
     });
   } catch (err) {
     next(err);
@@ -107,9 +124,48 @@ const adminUpdateSetting = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /api/admin/payments/subscriptions
+ */
+const adminGetSubscriptionPayments = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const { count, rows } = await db.Payment.findAndCountAll({
+      where: { payment_type: 'subscription' },
+      include: [
+        { 
+          model: db.User, 
+          as: 'user', 
+          attributes: ['id', 'name', 'email', 'phone'] 
+        },
+        { 
+          model: db.SubscriptionOption, 
+          as: 'subscriptionOption', 
+          include: [{ model: db.SubscriptionPlan, as: 'plan', attributes: ['name'] }]
+        }
+      ],
+      order: [['created_at', 'DESC']],
+      limit: parseInt(limit),
+      offset: (parseInt(page) - 1) * parseInt(limit)
+    });
+
+    res.json({ 
+      success: true, 
+      data: { 
+        payments: rows, 
+        total: count,
+        page: parseInt(page) 
+      } 
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   adminGetStats,
   adminGetUsers,
+  adminGetSubscriptionPayments,
   adminUpdateUserStatus: async (req, res, next) => { /* existing logic */
     try {
         const { status } = req.body;

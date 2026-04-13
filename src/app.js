@@ -17,8 +17,9 @@ const server = http.createServer(app);
 // Socket.io setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: true, // Echoes the requester's origin
     methods: ['GET', 'POST'],
+    credentials: true
   },
 });
 
@@ -26,10 +27,18 @@ const io = new Server(server, {
 app.set('io', io);
 
 // Middleware
-app.use(helmet({ crossOriginResourcePolicy: false }));
+app.set('trust proxy', true); // Essential for ngrok/proxies
+app.use(helmet({ 
+  crossOriginResourcePolicy: false,
+  crossOriginOpenerPolicy: false,
+  contentSecurityPolicy: false
+}));
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: true,
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'ngrok-skip-browser-warning'],
 }));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));

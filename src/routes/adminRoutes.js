@@ -7,7 +7,8 @@ const {
 } = require('../controllers/venueController');
 
 const {
-  adminGetStats, adminGetUsers, adminUpdateUserStatus
+  adminGetStats, adminGetUsers, adminUpdateUserStatus,
+  adminGetSubscriptionPayments
 } = require('../controllers/adminController');
 const { getAllBookings } = require('../controllers/bookingController');
 const { adminGetAllIncidents, adminUpdateIncidentStatus } = require('../controllers/incidentController');
@@ -41,5 +42,8 @@ router.put('/incidents/:id/status', adminUpdateIncidentStatus);
 // === Platform Settings ===
 router.get('/settings', adminGetSettings);
 router.put('/settings/:key', adminUpdateSetting);
+
+// === Financials ===
+router.get('/payments/subscriptions', adminGetSubscriptionPayments);
 
 module.exports = router;
