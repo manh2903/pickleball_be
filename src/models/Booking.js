@@ -103,10 +103,6 @@ const Booking = sequelize.define('Booking', {
     defaultValue: 0,
     comment: 'Refund per cancellation policy of the venue',
   },
-  points_earned: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0,
-  },
 }, {
   tableName: 'bookings',
   timestamps: true,

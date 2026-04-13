@@ -206,7 +206,7 @@ const createVenue = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: 'Đăng ký địa điểm thành công. Đang chờ admin duyệt.',
+      message: 'Đăng ký địa điểm thành công! Cơ sở đã được kích hoạt và sẵn sàng nhận khách.',
       data: venue,
     });
   } catch (err) {

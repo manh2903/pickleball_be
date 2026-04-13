@@ -83,16 +83,23 @@ const registerOwner = async (req, res, next) => {
       owner_status: 'approved', 
     });
 
-    // Auto-assign FREE subscription plan
-    const freePlan = await SubscriptionPlan.findOne({ where: { price: 0 } });
-    if (freePlan) {
-      const duration = freePlan.duration_months || 12;
+    // Auto-assign FREE subscription plan via normalized Option
+    const freeOption = await SubscriptionOption.findOne({
+      include: [{
+        model: SubscriptionPlan,
+        as: 'plan',
+        where: { name: { [require('sequelize').Op.like]: '%Free%' } }
+      }]
+    });
+
+    if (freeOption) {
       const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + duration);
+      endDate.setMonth(endDate.getMonth() + freeOption.duration_months);
 
       await OwnerSubscription.create({
         owner_id: user.id,
-        plan_id: freePlan.id,
+        plan_id: freeOption.plan_id,
+        option_id: freeOption.id,
         start_date: new Date(),
         end_date: endDate,
         status: 'active'

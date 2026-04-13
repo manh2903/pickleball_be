@@ -1,16 +1,20 @@
 const db = require('../models');
 const { ApiError } = require('../middleware/errorMiddleware');
 const { getActiveSubscription } = require('../utils/subscriptionHelper');
-const { Op } = require('sequelize');
 
 /**
- * GET /api/subscriptions/plans - Public listing of available plans
+ * GET /api/subscriptions/plans - Public listing of available plans with options
  */
 const getPlans = async (req, res, next) => {
   try {
     const plans = await db.SubscriptionPlan.findAll({
       where: { is_active: true },
-      order: [['price', 'ASC']]
+      include: [{
+        model: db.SubscriptionOption,
+        as: 'options',
+        where: { is_active: true }
+      }],
+      order: [['id', 'ASC']]
     });
     res.json({ success: true, data: plans });
   } catch (err) {
@@ -31,26 +35,30 @@ const getMySubscription = async (req, res, next) => {
 };
 
 /**
- * POST /api/subscriptions/purchase - Initiate VNPay payment for a plan
+ * POST /api/subscriptions/purchase - Initiate VNPay payment for an option
  */
 const purchasePlan = async (req, res, next) => {
   try {
-    const { plan_id } = req.body;
-    const plan = await db.SubscriptionPlan.findByPk(plan_id);
-    if (!plan) throw new ApiError(404, 'Không tìm thấy gói dịch vụ');
+    const { option_id } = req.body;
+    const option = await db.SubscriptionOption.findOne({
+      where: { id: option_id, is_active: true },
+      include: [{ model: db.SubscriptionPlan, as: 'plan' }]
+    });
 
-    // Create a temporary payment record or order
-    const amount = parseFloat(plan.price);
+    if (!option) throw new ApiError(404, 'Không tìm thấy tùy chọn thanh toán');
+
+    const amount = parseFloat(option.price);
     
     // Logic for VNPay integration
-    // For now, let's create a Pending record.
-    // In a real scenario, you'd call a vnpayHelper to generate a URL.
-    
     // TODO: Integrate VNPay here
     res.json({ 
       success: true, 
       message: 'Tính năng tích hợp VNPay cho gói đang được hoàn thiện. Vui lòng liên hệ admin.',
-      data: { plan, amount } 
+      data: { 
+        plan_name: option.plan.name, 
+        duration: option.duration_months,
+        amount 
+      } 
     });
   } catch (err) {
     next(err);
@@ -58,7 +66,7 @@ const purchasePlan = async (req, res, next) => {
 };
 
 /**
- * ADMIN: Create/Update Plans
+ * ADMIN: Create/Update Plans & Options
  */
 const adminCreatePlan = async (req, res, next) => {
   try {

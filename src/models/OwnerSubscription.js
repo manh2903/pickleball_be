@@ -15,6 +15,11 @@ const OwnerSubscription = sequelize.define('OwnerSubscription', {
     type: DataTypes.INTEGER,
     allowNull: false
   },
+  option_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'subscription_options', key: 'id' }
+  },
   start_date: {
     type: DataTypes.DATE,
     allowNull: false,

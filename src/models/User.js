@@ -36,15 +36,6 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING(500),
     allowNull: true,
   },
-  // For user role: loyalty system
-  points: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0,
-  },
-  member_rank: {
-    type: DataTypes.ENUM('bronze', 'silver', 'gold', 'diamond'),
-    defaultValue: 'bronze',
-  },
   // For owner role: platform status
   owner_status: {
     type: DataTypes.ENUM('pending', 'approved', 'suspended'),

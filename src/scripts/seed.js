@@ -74,7 +74,6 @@ async function seed() {
       "incidents",
       "shifts",
       "notifications",
-      "memberships",
       "withdrawal_requests",
       "courts",
       "venues",
@@ -84,22 +83,69 @@ async function seed() {
     await db.sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
 
     // SEED SUBSCRIPTION PLANS
-    console.log("💎 Seeding Subscription Plans...");
+    console.log("💎 Seeding Subscription Plans (Flexible Durations)...");
     const plans = await db.SubscriptionPlan.bulkCreate([
       {
         name: 'Gói Miễn Phí (Free)',
-        description: 'Phù hợp cho câu lạc bộ nhỏ mới bắt đầu.',
+        description: 'Phù hợp cho câu lạc bộ nhỏ mới bắt đầu vận hành.',
         price: 0,
         duration_months: 120,
         max_venues: 1,
         max_courts_per_venue: 3,
         features: { analytics: false, staff_management: false, custom_coupons: false }
       },
+      // BASIC TIERS
       {
-        name: 'Gói Chuyên Nghiệp (Premium)',
-        description: 'Giải pháp toàn diện cho hệ thống sân lớn.',
-        price: 1500000,
+        name: 'Gói Cơ Bản (1 Tháng)',
+        description: 'Dùng thử gói Cơ bản (3 cơ sở / 10 sân) trong 1 tháng.',
+        price: 100000,
         duration_months: 1,
+        max_venues: 3,
+        max_courts_per_venue: 10,
+        features: { analytics: true, staff_management: true, custom_coupons: false }
+      },
+      {
+        name: 'Gói Cơ Bản (6 Tháng)',
+        description: 'Gói Cơ bản (3 cơ sở / 10 sân) - Tiết kiệm hơn.',
+        price: 550000,
+        duration_months: 6,
+        max_venues: 3,
+        max_courts_per_venue: 10,
+        features: { analytics: true, staff_management: true, custom_coupons: false }
+      },
+      {
+        name: 'Gói Cơ Bản (1 Năm)',
+        description: 'Gói Cơ bản (3 cơ sở / 10 sân) - Giá ưu đãi nhất.',
+        price: 1000000,
+        duration_months: 12,
+        max_venues: 3,
+        max_courts_per_venue: 10,
+        features: { analytics: true, staff_management: true, custom_coupons: false }
+      },
+      // PREMIUM TIERS
+      {
+        name: 'Gói Chuyên Nghiệp (1 Tháng)',
+        description: 'Trải nghiệm full tính năng Premium (10 cơ sở / 30 sân) trong 1 tháng.',
+        price: 300000,
+        duration_months: 1,
+        max_venues: 10,
+        max_courts_per_venue: 30,
+        features: { analytics: true, staff_management: true, custom_coupons: true }
+      },
+      {
+        name: 'Gói Chuyên Nghiệp (6 Tháng)',
+        description: 'Mở rộng chuỗi sân chuyên nghiệp (10 cơ sở / 30 sân) - 6 tháng.',
+        price: 1600000,
+        duration_months: 6,
+        max_venues: 10,
+        max_courts_per_venue: 30,
+        features: { analytics: true, staff_management: true, custom_coupons: true }
+      },
+      {
+        name: 'Gói Chuyên Nghiệp (1 Năm)',
+        description: 'Quản trị toàn diện chuỗi sân (10 cơ sở / 30 sân) - Ưu tiên hỗ trợ.',
+        price: 3000000,
+        duration_months: 12,
         max_venues: 10,
         max_courts_per_venue: 30,
         features: { analytics: true, staff_management: true, custom_coupons: true, priority_support: true }
