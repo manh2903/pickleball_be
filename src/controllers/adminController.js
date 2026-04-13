@@ -79,6 +79,22 @@ const adminGetUsers = async (req, res, next) => {
 };
 
 /**
+ * PUT /api/admin/users/:id/status
+ */
+const adminUpdateUserStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const user = await db.User.findByPk(id);
+    if (!user) throw new ApiError(404, "Không tìm thấy người dùng");
+    await user.update({ status });
+    res.json({ success: true, message: "Cập nhật trạng thái thành công" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
  * GET /api/admin/settings
  */
 const adminGetSettings = async (req, res, next) => {
@@ -162,20 +178,55 @@ const adminGetSubscriptionPayments = async (req, res, next) => {
   }
 };
 
+const adminGetUserDetail = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const user = await db.User.findByPk(id, {
+      attributes: { exclude: ["password_hash", "refresh_token"] }
+    });
+
+    if (!user) throw new ApiError(404, "Không tìm thấy người dùng");
+
+    const detail = { user };
+
+    if (user.role === 'owner') {
+      // Get active subscription
+      const subscription = await db.OwnerSubscription.findOne({
+        where: { owner_id: id, status: 'active' },
+        include: [{ 
+          model: db.SubscriptionOption, 
+          as: 'option',
+          include: [{ model: db.SubscriptionPlan, as: 'plan' }]
+        }]
+      });
+      detail.subscription = subscription;
+
+      // Count venues
+      const venueCount = await db.Venue.count({ where: { owner_id: id } });
+      detail.venueCount = venueCount;
+    } else if (user.role === 'user') {
+      // Get recent bookings
+      const bookings = await db.Booking.findAll({
+        where: { user_id: id },
+        include: [{ model: db.Venue, as: 'venue', attributes: ['name'] }],
+        limit: 10,
+        order: [['created_at', 'DESC']]
+      });
+      detail.recentBookings = bookings;
+    }
+
+    res.json({ success: true, data: detail });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   adminGetStats,
   adminGetUsers,
-  adminGetSubscriptionPayments,
-  adminUpdateUserStatus: async (req, res, next) => { /* existing logic */
-    try {
-        const { status } = req.body;
-        const user = await db.User.findByPk(req.params.id);
-        if (!user) throw new ApiError(404, "Không tìm thấy người dùng");
-        if (user.role === "admin") throw new ApiError(403, "Không thể thao tác trên tài khoản admin");
-        await user.update({ status });
-        res.json({ success: true, data: user });
-    } catch(err) { next(err); }
-  },
+  adminUpdateUserStatus,
   adminGetSettings,
   adminUpdateSetting,
+  adminGetSubscriptionPayments,
+  adminGetUserDetail,
 };

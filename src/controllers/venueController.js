@@ -457,9 +457,32 @@ const deleteVenueImage = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /api/admin/venues/:id — Admin: get any venue detail
+ */
+const adminGetVenueDetail = async (req, res, next) => {
+  try {
+    const venue = await db.Venue.findByPk(req.params.id, {
+      include: [
+        { model: db.User, as: 'owner', attributes: ['id', 'name', 'email', 'phone'] },
+        { model: db.Court, as: 'courts' },
+        { model: db.Province, as: 'provinceState', attributes: ['ten_tinh'] },
+        { model: db.Ward, as: 'wardState', attributes: ['ten'] },
+      ]
+    });
+
+    if (!venue) throw new ApiError(404, 'Không tìm thấy địa điểm');
+
+    res.json({ success: true, data: venue });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getVenues, getVenueById,
   getOwnerVenues, getOwnerVenueById, createVenue, updateVenue,
   adminGetAllVenues, adminUpdateVenueStatus, adminSetCommission,
+  adminGetVenueDetail,
   uploadVenueImage, deleteVenueImage,
 };

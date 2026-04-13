@@ -3,12 +3,12 @@ const router = express.Router();
 const { authenticate, authorize } = require('../middleware/authMiddleware');
 
 const {
-  adminGetAllVenues, adminUpdateVenueStatus, adminSetCommission,
+  adminGetAllVenues, adminUpdateVenueStatus, adminSetCommission, adminGetVenueDetail
 } = require('../controllers/venueController');
 
 const {
   adminGetStats, adminGetUsers, adminUpdateUserStatus,
-  adminGetSubscriptionPayments
+  adminGetSubscriptionPayments, adminGetUserDetail
 } = require('../controllers/adminController');
 const { getAllBookings } = require('../controllers/bookingController');
 const { adminGetAllIncidents, adminUpdateIncidentStatus } = require('../controllers/incidentController');
@@ -25,11 +25,13 @@ router.get('/stats', adminGetStats);
 
 // === Owner/Venue management ===
 router.get('/venues', adminGetAllVenues);
+router.get('/venues/:id', adminGetVenueDetail);
 router.put('/venues/:id/status', adminUpdateVenueStatus);
 router.put('/venues/:id/commission', adminSetCommission);
 
 // === Users management ===
 router.get('/users', adminGetUsers);
+router.get('/users/:id', adminGetUserDetail);
 router.put('/users/:id/status', adminUpdateUserStatus);
 
 // === Bookings management ===
