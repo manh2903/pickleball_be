@@ -222,7 +222,7 @@ const createBooking = async (req, res, next) => {
     if (ids.length === 0) throw new ApiError(400, "Vui lòng chọn ít nhất một khung giờ");
 
     // Online bookings MUST use online payment to prevent "bùng" sân
-    if (payment_method !== "vnpay") {
+    if (payment_method !== "vnpay" && payment_method !== "wallet") {
       throw new ApiError(400, "Phương thức thanh toán không hợp lệ cho đặt sân trực tuyến. Vui lòng sử dụng VNPay.");
     }
 
@@ -316,6 +316,45 @@ const createBooking = async (req, res, next) => {
 
     await db.TimeSlot.update({ booking_id: booking.id, status: "booked" }, { where: { id: { [Op.in]: ids } }, transaction: t });
 
+    // ===== WALLET PAYMENT: Handle inside the same transaction =====
+    if (payment_method === "wallet") {
+      // 1. Re-fetch user with lock to get accurate balance
+      const payer = await db.User.findByPk(user.id, { lock: t.LOCK.UPDATE, transaction: t });
+      
+      if (!payer) throw new ApiError(404, "Không tìm thấy tài khoản");
+      
+      const currentBalance = parseFloat(payer.wallet_balance || 0);
+      if (currentBalance < totalPrice) {
+        throw new ApiError(400, 
+          `Số dư ví không đủ. Số dư hiện tại: ${new Intl.NumberFormat('vi-VN').format(currentBalance)}đ, cần: ${new Intl.NumberFormat('vi-VN').format(totalPrice)}đ`
+        );
+      }
+
+      // 2. Deduct from user wallet
+      await payer.decrement("wallet_balance", { by: totalPrice, transaction: t });
+
+      // 3. Credit owner wallet
+      const ownerUser = await db.User.findByPk(venue.owner_id, { transaction: t });
+      if (ownerUser) {
+        await ownerUser.increment("wallet_balance", { by: ownerRevenue, transaction: t });
+      }
+
+      // 4. Create Payment audit record
+      await db.Payment.create({
+        booking_id: booking.id,
+        user_id: user.id,
+        amount: totalPrice,
+        method: "wallet",
+        payment_type: "booking",
+        status: "completed",
+        note: `Thanh toán bằng ví - ${booking.booking_code}`,
+      }, { transaction: t });
+
+      // 5. Mark booking as paid immediately
+      await booking.update({ payment_status: "paid", status: "confirmed" }, { transaction: t });
+    }
+    // ============================================================
+
     const courtId = slots[0].court_id;
     const io = req.app.get("io");
     io?.to(`court-${courtId}`).emit("slots-updated", { ids, status: "booked", userId: req.user.id });
@@ -323,13 +362,6 @@ const createBooking = async (req, res, next) => {
     io?.to("admin-room").emit("new-booking", { booking, venue_name: venue.name });
 
     await t.commit();
-
-    // Notify user if email exists (Move this logic to ONLY after payment or confirmed cash)
-    /*
-    if (user.email) {
-      sendEmail({ ... }).catch((e) => console.error("Booking Email failed", e));
-    }
-    */
 
     let paymentUrl = null;
     if (payment_method === "vnpay") {
