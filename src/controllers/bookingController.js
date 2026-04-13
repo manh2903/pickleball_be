@@ -463,8 +463,9 @@ const getMyBookings = async (req, res, next) => {
           model: db.TimeSlot,
           as: "slots",
           attributes: ["date", "start_time", "end_time"],
-          include: [{ model: db.Court, as: "court", include: [{ model: db.Venue, as: "venue", attributes: ["name", "address"] }] }],
+          include: [{ model: db.Court, as: "court" }],
         },
+        { model: db.Venue, as: "venue", attributes: ["name", "address"] },
         { model: db.Payment, as: "payments", attributes: ["method", "status"] },
       ],
       order: [["created_at", "DESC"]],
@@ -491,8 +492,9 @@ const getBookingById = async (req, res, next) => {
         {
           model: db.TimeSlot,
           as: "slots",
-          include: [{ model: db.Court, as: "court", include: [{ model: db.Venue, as: "venue" }] }],
+          include: [{ model: db.Court, as: "court" }],
         },
+        { model: db.Venue, as: "venue" },
         { model: db.User, as: "user", attributes: ["id", "name", "phone"] },
         { model: db.Payment, as: "payments" },
       ],
@@ -547,8 +549,8 @@ const cancelBooking = async (req, res, next) => {
       console.warn('[cancelBooking] Cannot read cancel_buffer_hours, using default 2h');
     }
 
-    // 2. Validate cancellation window (admin bypasses this)
-    if (req.user.role !== 'admin') {
+    // 2. Validate cancellation window (admin bypasses this, or unpaid bookings)
+    if (req.user.role !== 'admin' && booking.payment_status !== 'unpaid') {
       const firstSlot = booking.slots?.[0];
       if (firstSlot) {
         const slotDate = firstSlot.date.toString().split('T')[0];
@@ -565,8 +567,20 @@ const cancelBooking = async (req, res, next) => {
       }
     }
 
-    // 3. Cancel booking & free slots
-    await booking.update({ status: 'cancelled', cancelled_at: new Date() }, { transaction: t });
+    // 3. Prepare slot info summary before freeing them
+    const slotInfos = booking.slots?.map(s => {
+      return `${s.date.toString().split('T')[0]} ${s.start_time.substring(0, 5)}`;
+    }).join(', ');
+    
+    const cancellationContext = `[Đã hủy] Lịch cũ: ${slotInfos}. ${booking.notes || ''}`;
+
+    // 4. Cancel booking & free slots
+    await booking.update({ 
+      status: 'cancelled', 
+      cancelled_at: new Date(),
+      notes: cancellationContext.substring(0, 1000) // Ensure it fits
+    }, { transaction: t });
+    
     await db.TimeSlot.update(
       { status: 'available', booking_id: null },
       { where: { booking_id: booking.id }, transaction: t }
@@ -792,8 +806,9 @@ const ownerGetBookingDetail = async (req, res, next) => {
         {
           model: db.TimeSlot,
           as: "slots",
-          include: [{ model: db.Court, as: "court", include: [{ model: db.Venue, as: "venue" }] }],
+          include: [{ model: db.Court, as: "court" }],
         },
+        { model: db.Venue, as: "venue" },
         { model: db.User, as: "user", attributes: ["name", "phone", "email"] },
       ],
     });
@@ -861,6 +876,7 @@ const getAllBookings = async (req, res, next) => {
     next(err);
   }
 };
+
 
 module.exports = {
   getAvailability,

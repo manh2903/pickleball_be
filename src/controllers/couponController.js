@@ -74,7 +74,14 @@ const updateCouponStatus = async (req, res, next) => {
     });
 
     if (!coupon) throw new ApiError(404, 'Không tìm thấy mã giảm giá');
-    if (coupon.venue.owner_id !== req.user.id) throw new ApiError(403, 'Bạn không có quyền chỉnh sửa mã này');
+
+    // Nếu là admin thì luôn được quyền sửa
+    if (req.user.role !== 'admin') {
+      // Nếu không phải admin, kiểm tra xem có phải chủ sân của mã này không
+      if (!coupon.venue || coupon.venue.owner_id !== req.user.id) {
+        throw new ApiError(403, 'Bạn không có quyền chỉnh sửa mã này');
+      }
+    }
 
     await coupon.update({ status });
     res.json({ success: true, message: 'Cập nhật trạng thái thành công' });
