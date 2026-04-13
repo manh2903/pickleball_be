@@ -599,10 +599,11 @@ const cancelBooking = async (req, res, next) => {
           // Ghi nhận: Khoản thu hồi từ ví chủ sân
           await db.Payment.create({
             booking_id: booking.id,
+            user_id: owner.id,
             amount: -deductAmount,
             method: 'wallet',
             status: 'completed',
-            note: `Thu hồi doanh thu từ chủ sân - hủy đặt sân #${booking.booking_code}`,
+            note: `Thu hồi doanh thu (khách hủy) - ${booking.booking_code}`,
           }, { transaction: t });
         }
       }
@@ -612,10 +613,11 @@ const cancelBooking = async (req, res, next) => {
       // Ghi nhận: Khoản hoàn trả cho khách hàng
       await db.Payment.create({
         booking_id: booking.id,
+        user_id: booking.user_id,
         amount: refundAmount,
         method: 'wallet',
         status: 'completed',
-        note: `Hoàn tiền vào ví khách - hủy đặt sân #${booking.booking_code}`,
+        note: `Hoàn tiền khách hủy sân - ${booking.booking_code}`,
       }, { transaction: t });
     }
 

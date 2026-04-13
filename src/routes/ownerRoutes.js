@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/authMiddleware');
-const { getStats, getVenueStaffs, createVenueStaff, getReports, updateStaffPassword, updateStaff, getRevenueAnalytics } = require('../controllers/ownerController');
+const { getStats, getVenueStaffs, createVenueStaff, getReports, updateStaffPassword, updateStaff, getRevenueAnalytics, getOwnerCashflow } = require('../controllers/ownerController');
 const { ownerGetVenueBookings, ownerGetBookingDetail } = require('../controllers/bookingController');
 const { getOwnerVenues, getOwnerVenueById, createVenue, updateVenue, uploadVenueImage, deleteVenueImage } = require('../controllers/venueController');
 const { ownerGetCourts, createCourt, updateCourt, deleteCourt } = require('../controllers/courtController');
@@ -15,6 +15,7 @@ router.use(authorize('owner'));
 // === Statistics ===
 router.get('/stats', getStats);
 router.get('/analytics', getRevenueAnalytics);
+router.get('/cashflow', getOwnerCashflow);
 router.get('/venues/:id/reports', getReports);
 
 // === Venues ===

@@ -56,15 +56,34 @@ const withdrawalController = {
 
         await t.commit();
 
-        // Notify Admin
+        // Notify ALL admins via notification bell + direct socket event
         const io = req.app.get('io');
-        await sendNotification(io, {
-          userId: 1, // Default admin
-          type: 'withdrawal_requested',
-          title: '💸 Yêu cầu rút tiền mới',
-          body: `Chủ sân ${req.user.name} yêu cầu rút ${parseInt(amount).toLocaleString()} VNĐ.`,
-          data: { request_id: request.id }
+
+        // Find all admin users dynamically (don't hardcode ID)
+        const adminUsers = await db.User.findAll({
+          where: { role: 'admin' },
+          attributes: ['id']
         });
+
+        for (const admin of adminUsers) {
+          await sendNotification(io, {
+            userId: admin.id,
+            type: 'withdrawal_requested',
+            title: '💸 Yêu cầu rút tiền mới',
+            body: `Chủ sân ${req.user.name} yêu cầu rút ${parseInt(amount).toLocaleString()} VNĐ.`,
+            data: { request_id: request.id }
+          });
+        }
+
+        // Also emit a direct admin-room socket event for instant table refresh
+        if (io) {
+          io.to('admin-room').emit('withdrawal-new-request', {
+            id: request.id,
+            owner_name: req.user.name,
+            amount: request.amount,
+            bank_name: request.bank_name
+          });
+        }
 
         res.status(201).json({ success: true, message: 'Gửi yêu cầu rút tiền thành công', data: request });
       } catch (err) {

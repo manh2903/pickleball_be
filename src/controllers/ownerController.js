@@ -255,7 +255,7 @@ const getRevenueAnalytics = async (req, res, next) => {
 };
 
 /**
- * GET /api/owner/venues/:id/reports
+ * GET /api/owner/reports
  * Get detailed financial/booking reports for a specific venue
  */
 const getReports = async (req, res, next) => {
@@ -403,6 +403,81 @@ const updateStaff = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /api/owner/cashflow
+ * Get complete cashflow history (Bookings, Withdrawals, Refunds, Subscriptions)
+ */
+const getOwnerCashflow = async (req, res, next) => {
+  try {
+    const ownerId = req.user.id;
+    const history = [];
+
+    // 1. Withdrawals (WithdrawalRequest)
+    const withdrawals = await db.WithdrawalRequest.findAll({ where: { owner_id: ownerId } });
+    withdrawals.forEach(w => {
+      history.push({
+        id: `w_${w.id}`,
+        type: 'withdrawal',
+        amount: -parseFloat(w.amount),
+        date: w.created_at || w.createdAt,
+        status: w.status,
+        description: `Rút tiền: ${w.bank_name} - ${w.bank_account}`
+      });
+    });
+
+    // 2. Payments (Subscriptions, Clawbacks, etc)
+    const payments = await db.Payment.findAll({
+      where: { user_id: ownerId },
+      include: [
+        { model: db.SubscriptionOption, as: 'option', include: [{ model: db.SubscriptionPlan, as: 'plan' }] }
+      ]
+    });
+    payments.forEach(p => {
+      let desc = p.note || 'Giao dịch ví';
+      if (p.option) desc = `Thanh toán gói: ${p.option.plan.name}`;
+      history.push({
+        id: `p_${p.id}`,
+        type: p.amount < 0 ? 'expense' : 'income',
+        amount: parseFloat(p.amount),
+        date: p.created_at || p.createdAt,
+        status: p.status,
+        description: desc
+      });
+    });
+
+    // 3. Booking Revenue
+    const venues = await db.Venue.findAll({ where: { owner_id: ownerId }, attributes: ['id'] });
+    if (venues.length > 0) {
+      const venueIds = venues.map(v => v.id);
+      const bookings = await db.Booking.findAll({
+        where: { venue_id: { [Op.in]: venueIds }, payment_status: 'paid' },
+        attributes: ['id', 'booking_code', 'owner_revenue', 'total_price', 'created_at']
+      });
+      
+      bookings.forEach(b => {
+        const rev = parseFloat(b.owner_revenue || b.total_price || 0);
+        if (rev > 0) {
+          history.push({
+            id: `b_${b.id}`,
+            type: 'income',
+            amount: rev,
+            date: b.created_at || b.createdAt,
+            status: 'completed',
+            description: `Doanh thu đặt sân: ${b.booking_code}`
+          });
+        }
+      });
+    }
+
+    // Sort descending by date
+    history.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    res.json({ success: true, data: history });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getStats,
   getRevenueAnalytics,
@@ -410,5 +485,6 @@ module.exports = {
   createVenueStaff,
   getReports,
   updateStaffPassword,
-  updateStaff
+  updateStaff,
+  getOwnerCashflow
 };
