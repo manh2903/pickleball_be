@@ -2,6 +2,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { User, SubscriptionPlan, OwnerSubscription } = require('../models');
 const { ApiError } = require('../middleware/errorMiddleware');
+const db = require('../models');
+const { Op } = require('sequelize');
 
 const generateTokens = (user) => {
   const payload = { id: user.id, role: user.role };
@@ -18,10 +20,35 @@ const generateTokens = (user) => {
 };
 
 const sanitizeUser = (user) => {
-  const data = user.toJSON();
+  const data = typeof user.toJSON === 'function' ? user.toJSON() : user;
   delete data.password_hash;
   delete data.refresh_token;
   return data;
+};
+
+// Helper to attach real-time balances for Owner
+const getUserWithBalances = async (userRecord) => {
+  const safeUser = sanitizeUser(userRecord);
+  let pending_balance = 0;
+  
+  if (safeUser.role === 'owner') {
+    const venues = await db.Venue.findAll({ where: { owner_id: safeUser.id }, attributes: ['id'] });
+    const venueIds = venues.map(v => v.id);
+    
+    if (venueIds.length > 0) {
+      pending_balance = await db.Booking.sum('total_price', {
+        where: {
+          venue_id: { [Op.in]: venueIds },
+          status: 'confirmed', // Đang giữ chờ khách đánh xong
+          payment_status: 'paid'
+        }
+      }) || 0;
+    }
+  }
+  
+  safeUser.pending_balance = pending_balance;
+  safeUser.available_balance = Math.max(0, (safeUser.wallet_balance || 0) - pending_balance);
+  return safeUser;
 };
 
 /**
@@ -106,10 +133,12 @@ const registerOwner = async (req, res, next) => {
       });
     }
 
+    const finalUser = await getUserWithBalances(user);
+
     res.status(201).json({
       success: true,
       message: 'Đăng ký tài khoản chủ sân thành công! Bạn có thể đăng nhập ngay.',
-      data: { user: sanitizeUser(user) },
+      data: { user: finalUser },
     });
   } catch (err) {
     next(err);
@@ -136,10 +165,12 @@ const login = async (req, res, next) => {
     const { accessToken, refreshToken } = generateTokens(user);
     await user.update({ refresh_token: refreshToken, last_login: new Date() });
 
+    const finalUser = await getUserWithBalances(user);
+
     res.json({
       success: true,
       message: 'Đăng nhập thành công',
-      data: { user: sanitizeUser(user), accessToken, refreshToken },
+      data: { user: finalUser, accessToken, refreshToken },
     });
   } catch (err) {
     next(err);
@@ -188,8 +219,13 @@ const logout = async (req, res, next) => {
 /**
  * GET /api/auth/me
  */
-const getMe = async (req, res) => {
-  res.json({ success: true, data: sanitizeUser(req.user) });
+const getMe = async (req, res, next) => {
+  try {
+    const finalUser = await getUserWithBalances(req.user);
+    res.json({ success: true, data: { user: finalUser } });
+  } catch (err) {
+    next(err);
+  }
 };
 
 /**

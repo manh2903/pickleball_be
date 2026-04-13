@@ -11,10 +11,27 @@ const withdrawalController = {
   requestWithdrawal: async (req, res, next) => {
     try {
       const { amount, bank_name, bank_account, bank_account_name, note } = req.body;
+      const { Op } = require('sequelize');
       const owner = await db.User.findByPk(req.user.id);
 
-      if (owner.wallet_balance < amount) {
-        throw new ApiError(400, 'Số dư ví không đủ để thực hiện yêu cầu này');
+      // 1. Compute pending balance to enforce holding policy
+      const venues = await db.Venue.findAll({ where: { owner_id: req.user.id }, attributes: ['id'] });
+      const venueIds = venues.map(v => v.id);
+      let pending_balance = 0;
+      if (venueIds.length > 0) {
+        pending_balance = await db.Booking.sum('owner_revenue', {
+          where: {
+            venue_id: { [Op.in]: venueIds },
+            status: 'confirmed',
+            payment_status: 'paid'
+          }
+        }) || 0;
+      }
+      
+      const available_balance = Math.max(0, (owner.wallet_balance || 0) - pending_balance);
+
+      if (available_balance < amount) {
+        throw new ApiError(400, `Số dư khả dụng không đủ (Đang tạm giữ: ${new Intl.NumberFormat('vi-VN').format(pending_balance)}đ chờ sân hoàn thành)`);
       }
 
       if (amount < 50000) {

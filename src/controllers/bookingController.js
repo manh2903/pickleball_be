@@ -230,7 +230,7 @@ const createBooking = async (req, res, next) => {
       where: { id: { [Op.in]: ids } },
       include: [
         { model: db.Court, as: "court" },
-        { model: db.Venue, as: "venue", attributes: ["id", "commission_rate", "status"] },
+        { model: db.Venue, as: "venue", attributes: ["id", "commission_rate", "status", "owner_id"] },
       ],
       lock: t.LOCK.UPDATE,
       transaction: t,
