@@ -30,6 +30,28 @@ const createVNPayUrl = async (req, res, next) => {
 };
 
 /**
+ * GET /api/payments/my - Get user's payment history (Owner's subscriptions etc)
+ */
+const getMyPayments = async (req, res, next) => {
+  try {
+    const payments = await db.Payment.findAll({
+      where: { user_id: req.user.id },
+      include: [
+        { 
+          model: db.SubscriptionOption, 
+          as: 'option',
+          include: [{ model: db.SubscriptionPlan, as: 'plan' }]
+        }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+    res.json({ success: true, data: payments });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
  * Handle VNPAY Return URL (User Redirect)
  */
 const vnpayReturn = async (req, res, next) => {
@@ -165,6 +187,7 @@ async function handlePaymentSuccess(req, bookingId, transactionId) {
 
 module.exports = {
   createVNPayUrl,
+  getMyPayments,
   vnpayReturn,
   vnpayIPN,
 };
