@@ -285,7 +285,9 @@ const createBooking = async (req, res, next) => {
     const qrCodeBase64 = await qrcode.toDataURL(qrData);
 
     // Financial calculation - NO COMMISSION (Subscription model)
+    // Owner receives 100% of total_price. No platform commission deducted.
     const venue = slots[0].venue;
+    const ownerRevenue = totalPrice; // 100% goes to owner
 
     const { customer_name, customer_phone, customer_email } = req.body;
 
@@ -300,7 +302,8 @@ const createBooking = async (req, res, next) => {
         booking_type: "online",
         status: "confirmed",
         total_price: totalPrice,
-        original_price: originalTotalPrice, // Optional store for transparency
+        original_price: originalTotalPrice,
+        owner_revenue: ownerRevenue,   // ← FIX: Set explicitly so VNPay callback can credit owner
         payment_status: "unpaid",
         payment_method: payment_method,
         coupon_id: couponId,
@@ -489,12 +492,139 @@ const getBookingById = async (req, res, next) => {
 const cancelBooking = async (req, res, next) => {
   const t = await db.sequelize.transaction();
   try {
-    const booking = await db.Booking.findByPk(req.params.id, { transaction: t });
-    if (!booking) throw new ApiError(404, "Không tìm thấy booking");
-    await booking.update({ status: "cancelled", cancelled_at: new Date() }, { transaction: t });
-    await db.TimeSlot.update({ status: "available", booking_id: null }, { where: { booking_id: booking.id }, transaction: t });
+    const booking = await db.Booking.findByPk(req.params.id, {
+      include: [
+        { model: db.TimeSlot, as: 'slots', attributes: ['date', 'start_time'] },
+        { model: db.User, as: 'user', attributes: ['id', 'name', 'email'] },
+      ],
+      transaction: t,
+    });
+
+    if (!booking) throw new ApiError(404, 'Không tìm thấy booking');
+    if (booking.user_id !== req.user.id && req.user.role !== 'admin')
+      throw new ApiError(403, 'Bạn không có quyền hủy đặt sân này');
+    if (booking.status === 'cancelled') throw new ApiError(400, 'Đặt sân này đã bị hủy trước đó');
+    if (booking.status === 'checked_in') throw new ApiError(400, 'Không thể hủy đặt sân đã check-in');
+
+    // 1. Read cancel_buffer_hours from PlatformSetting
+    let bufferHours = 2;
+    try {
+      const setting = await db.PlatformSetting.findOne({ where: { key: 'cancel_buffer_hours' } });
+      if (setting?.value) bufferHours = parseFloat(setting.value);
+    } catch (e) {
+      console.warn('[cancelBooking] Cannot read cancel_buffer_hours, using default 2h');
+    }
+
+    // 2. Validate cancellation window (admin bypasses this)
+    if (req.user.role !== 'admin') {
+      const firstSlot = booking.slots?.[0];
+      if (firstSlot) {
+        const slotDate = firstSlot.date.toString().split('T')[0];
+        const slotTime = firstSlot.start_time.toString().substring(0, 5);
+        const slotDateTime = new Date(`${slotDate}T${slotTime}:00`);
+        const diffHours = (slotDateTime - new Date()) / (1000 * 60 * 60);
+
+        if (diffHours < bufferHours) {
+          throw new ApiError(
+            400,
+            `Không thể hủy sân. Quy định hủy trước tối thiểu ${bufferHours} giờ. Thời gian còn lại: ${Math.max(0, diffHours).toFixed(1)} giờ.`
+          );
+        }
+      }
+    }
+
+    // 3. Cancel booking & free slots
+    await booking.update({ status: 'cancelled', cancelled_at: new Date() }, { transaction: t });
+    await db.TimeSlot.update(
+      { status: 'available', booking_id: null },
+      { where: { booking_id: booking.id }, transaction: t }
+    );
+
+    // 4. Hoàn tiền nếu đã thanh toán: hoàn lại khách + trừ lại chủ sân
+    let refundAmount = 0;
+    if (booking.payment_status === 'paid' && booking.total_price > 0) {
+      refundAmount = parseFloat(booking.total_price);
+
+      // 4a. Cộng tiền vào ví khách hàng (hoàn toàn bộ số tiền đã trả)
+      const userRecord = await db.User.findByPk(booking.user_id, { transaction: t });
+      if (userRecord) {
+        await userRecord.increment('wallet_balance', { by: refundAmount, transaction: t });
+      }
+
+      // 4b. Trừ tiền ví chủ sân (lấy lại phần doanh thu đã cộng khi thanh toán)
+      //     owner_revenue lưu phần chủ sân đã nhận; nếu chưa có thì dùng total_price
+      const ownerRevenue = parseFloat(booking.owner_revenue || booking.total_price);
+      const venue = await db.Venue.findByPk(booking.venue_id, { transaction: t });
+      if (venue) {
+        const owner = await db.User.findByPk(venue.owner_id, { transaction: t });
+        if (owner && ownerRevenue > 0) {
+          // Đảm bảo không trừ âm hơn số dư hiện có
+          const deductAmount = Math.min(ownerRevenue, parseFloat(owner.wallet_balance || 0));
+          if (deductAmount > 0) {
+            await owner.decrement('wallet_balance', { by: deductAmount, transaction: t });
+          }
+
+          // Ghi nhận: Khoản thu hồi từ ví chủ sân
+          await db.Payment.create({
+            booking_id: booking.id,
+            amount: -deductAmount,
+            method: 'wallet',
+            status: 'completed',
+            note: `Thu hồi doanh thu từ chủ sân - hủy đặt sân #${booking.booking_code}`,
+          }, { transaction: t });
+        }
+      }
+
+      await booking.update({ payment_status: 'refunded' }, { transaction: t });
+
+      // Ghi nhận: Khoản hoàn trả cho khách hàng
+      await db.Payment.create({
+        booking_id: booking.id,
+        amount: refundAmount,
+        method: 'wallet',
+        status: 'completed',
+        note: `Hoàn tiền vào ví khách - hủy đặt sân #${booking.booking_code}`,
+      }, { transaction: t });
+    }
+
     await t.commit();
-    res.json({ success: true, message: "Hủy thành công" });
+
+    // 5. Gửi email xác nhận hủy
+    if (booking.user?.email) {
+      sendEmail({
+        to: booking.user.email,
+        subject: `🚫 Hủy đặt sân thành công - #${booking.booking_code}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; max-width: 560px;">
+            <h2 style="color: #DC2626; margin-top: 0;">Xác nhận hủy đặt sân</h2>
+            <p>Chào <strong>${booking.user.name}</strong>,</p>
+            <p>Đặt sân <strong>#${booking.booking_code}</strong> đã được hủy thành công.</p>
+            ${refundAmount > 0 ? `
+              <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                <p style="margin: 0; font-weight: 700; color: #166534;">
+                  💰 Hoàn tiền: ${new Intl.NumberFormat('vi-VN').format(refundAmount)}đ đã được cộng vào ví của bạn.
+                </p>
+                <p style="margin: 8px 0 0; font-size: 13px; color: #15803d;">Bạn có thể dùng số dư này để đặt sân lần sau trên nền tảng.</p>
+              </div>
+            ` : `<p style="color: #64748b; font-size: 13px;">Đặt sân chưa thanh toán - không có khoản hoàn tiền.</p>`}
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <footer style="font-size: 12px; color: #94a3b8;">Pickleball Court Marketplace — Hệ thống tự động.</footer>
+          </div>
+        `,
+      }).catch((e) => console.error('Cancel Email failed', e));
+    }
+
+    // 6. Realtime socket notify
+    const io = req.app.get('io');
+    io?.to(`venue-${booking.venue_id}`).emit('booking-status-updated', { id: booking.id, status: 'cancelled' });
+
+    res.json({
+      success: true,
+      message: refundAmount > 0
+        ? `Hủy thành công! ${new Intl.NumberFormat('vi-VN').format(refundAmount)}đ đã được hoàn vào ví.`
+        : 'Hủy đặt sân thành công.',
+      data: { refundAmount, bufferHours },
+    });
   } catch (err) {
     await t.rollback();
     next(err);

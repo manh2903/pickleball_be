@@ -4,51 +4,30 @@ const { Op } = require("sequelize");
 
 /**
  * GET /api/admin/stats
- * Platform-wide overview stats
  */
 const adminGetStats = async (req, res, next) => {
   try {
-    // 1. Total Revenue (platform wide)
     const totalRevenue = await db.Booking.sum("total_price", {
       where: { status: { [Op.ne]: "cancelled" }, payment_status: "paid" },
     });
-
-    // 2. Platform Revenue (total commission) - LEGACY: Set to 0
-    const platformRevenue = 0;
-
-    // 3. Active Venues
     const activeVenues = await db.Venue.count({ where: { status: "active" } });
-
-    // 4. Total Bookings
     const totalBookings = await db.Booking.count({
       where: { status: { [Op.ne]: "cancelled" } },
     });
-
-    // 5. New Users (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const newUsers = await db.User.count({
       where: { role: "user", created_at: { [Op.gte]: thirtyDaysAgo } },
     });
-
-    // 6. Recent Venues (pending review)
     const recentVenues = await db.Venue.findAll({
       where: { status: "pending_review" },
       include: [{ model: db.User, as: "owner", attributes: ["id", "name", "email"] }],
-      limit: 5,
-      order: [["created_at", "DESC"]],
+      limit: 5, order: [["created_at", "DESC"]],
     });
 
     res.json({
       success: true,
-      data: {
-        totalRevenue: totalRevenue || 0,
-        platformRevenue: platformRevenue || 0,
-        activeVenues,
-        totalBookings,
-        newUsers,
-        recentVenues,
-      },
+      data: { totalRevenue: totalRevenue || 0, activeVenues, totalBookings, newUsers, recentVenues },
     });
   } catch (err) {
     next(err);
@@ -76,34 +55,7 @@ const adminGetUsers = async (req, res, next) => {
       offset: (parseInt(page) - 1) * parseInt(limit),
     });
 
-    res.json({
-      success: true,
-      data: {
-        users: rows,
-        total: count,
-        page: parseInt(page),
-        totalPages: Math.ceil(count / parseInt(limit)),
-      },
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-/**
- * PUT /api/admin/users/:id/status
- */
-const adminUpdateUserStatus = async (req, res, next) => {
-  try {
-    const { status } = req.body;
-    const user = await db.User.findByPk(req.params.id);
-    if (!user) throw new ApiError(404, "Không tìm thấy người dùng");
-
-    // Prevent blocking yourself or other admins
-    if (user.role === "admin") throw new ApiError(403, "Không thể thao tác trên tài khoản admin");
-
-    await user.update({ status });
-    res.json({ success: true, message: `Trạng thái tài khoản đã được cập nhật thành: ${status}`, data: user });
+    res.json({ success: true, data: { users: rows, total: count, page: parseInt(page), totalPages: Math.ceil(count / parseInt(limit)) } });
   } catch (err) {
     next(err);
   }
@@ -114,14 +66,14 @@ const adminUpdateUserStatus = async (req, res, next) => {
  */
 const adminGetSettings = async (req, res, next) => {
   try {
-    const settings = await db.PlatformSetting.findAll();
+    const settings = await db.PlatformSetting.findAll({
+        order: [['id', 'ASC']]
+    });
     res.json({ success: true, data: settings });
   } catch (err) {
     next(err);
   }
 };
-
-const { sendEmail } = require("../utils/mailer");
 
 /**
  * PUT /api/admin/settings/:key
@@ -129,18 +81,27 @@ const { sendEmail } = require("../utils/mailer");
 const adminUpdateSetting = async (req, res, next) => {
   try {
     const { key } = req.params;
-    const { value, description } = req.body;
+    const { value } = req.body;
 
-    const [setting, created] = await db.PlatformSetting.findOrCreate({
-      where: { key },
-      defaults: { value, description, group: "general" },
-    });
-
-    if (!created) {
-      await setting.update({ value, description });
+    let setting = await db.PlatformSetting.findOne({ where: { key } });
+    
+    if (setting) {
+        await setting.update({ 
+            value: value.toString(), 
+            updated_by: req.user.id 
+        });
+    } else {
+        // Fallback create if somehow missing
+        setting = await db.PlatformSetting.create({
+            key,
+            value: value.toString(),
+            label: key,
+            type: isNaN(value) ? 'text' : 'number',
+            updated_by: req.user.id
+        });
     }
 
-    res.json({ success: true, message: `Cập nhật cài đặt ${key} thành công`, data: setting });
+    res.json({ success: true, message: `Cập nhật cài đặt thành công`, data: setting });
   } catch (err) {
     next(err);
   }
@@ -149,7 +110,16 @@ const adminUpdateSetting = async (req, res, next) => {
 module.exports = {
   adminGetStats,
   adminGetUsers,
-  adminUpdateUserStatus,
+  adminUpdateUserStatus: async (req, res, next) => { /* existing logic */
+    try {
+        const { status } = req.body;
+        const user = await db.User.findByPk(req.params.id);
+        if (!user) throw new ApiError(404, "Không tìm thấy người dùng");
+        if (user.role === "admin") throw new ApiError(403, "Không thể thao tác trên tài khoản admin");
+        await user.update({ status });
+        res.json({ success: true, data: user });
+    } catch(err) { next(err); }
+  },
   adminGetSettings,
   adminUpdateSetting,
 };

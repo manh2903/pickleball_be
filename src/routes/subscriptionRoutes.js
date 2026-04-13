@@ -14,5 +14,6 @@ router.post('/purchase', authenticate, authorize('owner'), subscriptionControlle
 // Admin
 router.post('/admin/plans', authenticate, authorize('admin'), subscriptionController.adminCreatePlan);
 router.put('/admin/plans/:id', authenticate, authorize('admin'), subscriptionController.adminUpdatePlan);
+router.put('/admin/options/:id', authenticate, authorize('admin'), subscriptionController.adminUpdateOption);
 
 module.exports = router;

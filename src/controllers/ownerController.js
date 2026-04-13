@@ -171,6 +171,90 @@ const createVenueStaff = async (req, res, next) => {
 };
 
 /**
+ * GET /api/owner/analytics?venue_id=
+ * Rich analytics for Basic/Premium owners
+ */
+const getRevenueAnalytics = async (req, res, next) => {
+  try {
+    const ownerId = req.user.id;
+    const { venue_id } = req.query;
+    const whereVenue = { owner_id: ownerId };
+    if (venue_id) whereVenue.id = venue_id;
+
+    const venues = await db.Venue.findAll({ where: whereVenue, attributes: ['id', 'name'] });
+    const venueIds = venues.map(v => v.id);
+    if (venueIds.length === 0) return res.json({ success: true, data: { daily: [], monthly: [], totalRevenue: 0, totalBookings: 0 } });
+
+    const baseWhere = { venue_id: { [Op.in]: venueIds }, payment_status: 'paid', status: { [Op.ne]: 'cancelled' } };
+
+    // 1. Daily revenue — last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const dailyRaw = await db.Booking.findAll({
+      attributes: [
+        [db.sequelize.fn('DATE', db.sequelize.col('Booking.created_at')), 'date'],
+        [db.sequelize.fn('SUM', db.sequelize.col('total_price')), 'revenue'],
+        [db.sequelize.fn('COUNT', db.sequelize.col('Booking.id')), 'count'],
+      ],
+      where: { ...baseWhere, created_at: { [Op.gte]: thirtyDaysAgo } },
+      group: [db.sequelize.fn('DATE', db.sequelize.col('Booking.created_at'))],
+      order: [[db.sequelize.fn('DATE', db.sequelize.col('Booking.created_at')), 'ASC']],
+      raw: true
+    });
+
+    // Fill missing days with 0
+    const dailyMap = {};
+    dailyRaw.forEach(r => { dailyMap[r.date] = { revenue: parseFloat(r.revenue), count: parseInt(r.count) }; });
+    const daily = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      daily.push({ date: key, revenue: dailyMap[key]?.revenue || 0, count: dailyMap[key]?.count || 0 });
+    }
+
+    // 2. Monthly revenue — last 12 months
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
+    twelveMonthsAgo.setDate(1);
+    const monthlyRaw = await db.Booking.findAll({
+      attributes: [
+        [db.sequelize.fn('DATE_FORMAT', db.sequelize.col('Booking.created_at'), '%Y-%m'), 'month'],
+        [db.sequelize.fn('SUM', db.sequelize.col('total_price')), 'revenue'],
+        [db.sequelize.fn('COUNT', db.sequelize.col('Booking.id')), 'count'],
+      ],
+      where: { ...baseWhere, created_at: { [Op.gte]: twelveMonthsAgo } },
+      group: [db.sequelize.fn('DATE_FORMAT', db.sequelize.col('Booking.created_at'), '%Y-%m')],
+      order: [[db.sequelize.fn('DATE_FORMAT', db.sequelize.col('Booking.created_at'), '%Y-%m'), 'ASC']],
+      raw: true
+    });
+    const monthlyMap = {};
+    monthlyRaw.forEach(r => { monthlyMap[r.month] = { revenue: parseFloat(r.revenue), count: parseInt(r.count) }; });
+    const monthly = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(); d.setMonth(d.getMonth() - i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('vi-VN', { month: 'short', year: 'numeric' });
+      monthly.push({ month: key, label, revenue: monthlyMap[key]?.revenue || 0, count: monthlyMap[key]?.count || 0 });
+    }
+
+    // 3. Summary stats
+    const totalRevenue = await db.Booking.sum('total_price', { where: baseWhere }) || 0;
+    const totalBookings = await db.Booking.count({ where: baseWhere });
+
+    // 4. Booking type breakdown (online vs walkin)
+    const onlineCount = await db.Booking.count({ where: { ...baseWhere, booking_type: 'online' } });
+    const walkinCount = await db.Booking.count({ where: { ...baseWhere, booking_type: 'walkin' } });
+
+    res.json({
+      success: true,
+      data: { daily, monthly, totalRevenue, totalBookings, onlineCount, walkinCount }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
  * GET /api/owner/venues/:id/reports
  * Get detailed financial/booking reports for a specific venue
  */
@@ -321,6 +405,7 @@ const updateStaff = async (req, res, next) => {
 
 module.exports = {
   getStats,
+  getRevenueAnalytics,
   getVenueStaffs,
   createVenueStaff,
   getReports,

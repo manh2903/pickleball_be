@@ -35,7 +35,7 @@ const Payment = sequelize.define('Payment', {
     allowNull: false,
   },
   method: {
-    type: DataTypes.ENUM('cash', 'bank_transfer', 'momo', 'zalopay', 'qr_code', 'vnpay'),
+    type: DataTypes.ENUM('cash', 'bank_transfer', 'momo', 'zalopay', 'qr_code', 'vnpay', 'wallet'),
     allowNull: false,
   },
   status: {

@@ -24,14 +24,7 @@ const pickRandom = (arr) => arr[rand(0, arr.length - 1)];
 const pickSome = (arr, n) => [...arr].sort(() => 0.5 - Math.random()).slice(0, n);
 
 function slugify(text, extra = "") {
-  const base = text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-");
+  const base = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-");
   return extra ? `${base}-${extra}` : base;
 }
 
@@ -40,29 +33,19 @@ async function seed() {
     console.log("🔄 Connecting to database...");
     await db.sequelize.authenticate();
 
-    // Ensure tables exist
     console.log("📂 Syncing database models (ALTER)...");
-    await db.sequelize.sync({ alter: true });
+    await db.sequelize.sync({ alter: false });
 
-    // Fetch locations logic MUST follow setup_locations.js first or we need to preserve it.
-    // wait, if I force true, I lose provinces/wards.
-    // I should NOT force true on locations.
-    
-    // Better: Only force sync specific models? No.
-    // Let's use alter: true and hope for the best, or manually DROP tables.
-
-    // Fetch real locations from DB
     const provinces = await db.Province.findAll();
     const wards = await db.Ward.findAll();
     if (provinces.length === 0 || wards.length === 0) {
       throw new Error("No provinces or wards found in DB. Run setup_locations.js first.");
     }
-    console.log(`✅ Loaded ${provinces.length} provinces and ${wards.length} wards from DB.`);
 
-    // TRUNCATE
     console.log("🗑️  Truncating tables...");
     await db.sequelize.query("SET FOREIGN_KEY_CHECKS = 0");
     const tables = [
+      "subscription_options",
       "subscription_plans",
       "owner_subscriptions",
       "time_slots",
@@ -79,86 +62,44 @@ async function seed() {
       "venues",
       "users",
     ];
-    for (const t of tables) await db.sequelize.query(`TRUNCATE TABLE \`${t}\``);
+    for (const t of tables) {
+        try { await db.sequelize.query(`TRUNCATE TABLE \`${t}\``); } catch(e) {}
+    }
     await db.sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
 
-    // SEED SUBSCRIPTION PLANS
-    console.log("💎 Seeding Subscription Plans (Flexible Durations)...");
-    const plans = await db.SubscriptionPlan.bulkCreate([
-      {
+    // 1. SEED SUBSCRIPTION PLANS (Tiers)
+    console.log("💎 Seeding Subscription Tiers...");
+    const planFree = await db.SubscriptionPlan.create({
         name: 'Gói Miễn Phí (Free)',
-        description: 'Phù hợp cho câu lạc bộ nhỏ mới bắt đầu vận hành.',
-        price: 0,
-        duration_months: 120,
-        max_venues: 1,
-        max_courts_per_venue: 3,
-        features: { analytics: false, staff_management: false, custom_coupons: false }
-      },
-      // BASIC TIERS
-      {
-        name: 'Gói Cơ Bản (1 Tháng)',
-        description: 'Dùng thử gói Cơ bản (3 cơ sở / 10 sân) trong 1 tháng.',
-        price: 100000,
-        duration_months: 1,
-        max_venues: 3,
-        max_courts_per_venue: 10,
-        features: { analytics: true, staff_management: true, custom_coupons: false }
-      },
-      {
-        name: 'Gói Cơ Bản (6 Tháng)',
-        description: 'Gói Cơ bản (3 cơ sở / 10 sân) - Tiết kiệm hơn.',
-        price: 550000,
-        duration_months: 6,
-        max_venues: 3,
-        max_courts_per_venue: 10,
-        features: { analytics: true, staff_management: true, custom_coupons: false }
-      },
-      {
-        name: 'Gói Cơ Bản (1 Năm)',
-        description: 'Gói Cơ bản (3 cơ sở / 10 sân) - Giá ưu đãi nhất.',
-        price: 1000000,
-        duration_months: 12,
-        max_venues: 3,
-        max_courts_per_venue: 10,
-        features: { analytics: true, staff_management: true, custom_coupons: false }
-      },
-      // PREMIUM TIERS
-      {
-        name: 'Gói Chuyên Nghiệp (1 Tháng)',
-        description: 'Trải nghiệm full tính năng Premium (10 cơ sở / 30 sân) trong 1 tháng.',
-        price: 300000,
-        duration_months: 1,
-        max_venues: 10,
-        max_courts_per_venue: 30,
-        features: { analytics: true, staff_management: true, custom_coupons: true }
-      },
-      {
-        name: 'Gói Chuyên Nghiệp (6 Tháng)',
-        description: 'Mở rộng chuỗi sân chuyên nghiệp (10 cơ sở / 30 sân) - 6 tháng.',
-        price: 1600000,
-        duration_months: 6,
-        max_venues: 10,
-        max_courts_per_venue: 30,
-        features: { analytics: true, staff_management: true, custom_coupons: true }
-      },
-      {
-        name: 'Gói Chuyên Nghiệp (1 Năm)',
-        description: 'Quản trị toàn diện chuỗi sân (10 cơ sở / 30 sân) - Ưu tiên hỗ trợ.',
-        price: 3000000,
-        duration_months: 12,
-        max_venues: 10,
-        max_courts_per_venue: 30,
-        features: { analytics: true, staff_management: true, custom_coupons: true, priority_support: true }
-      }
+        description: 'Mặc định cho mọi chủ sân mới đăng ký.',
+    });
+    const planBasic = await db.SubscriptionPlan.create({
+        name: 'Gói Cơ Bản (Basic)',
+        description: 'Dành cho câu lạc bộ nhỏ bắt đầu mở rộng.',
+    });
+    const planPremium = await db.SubscriptionPlan.create({
+        name: 'Gói Chuyên Nghiệp (Premium)',
+        description: 'Quản trị toàn diện chuỗi sân lớn và báo cáo chuyên sâu.',
+    });
+
+    // 2. SEED SUBSCRIPTION OPTIONS (Durations & Price)
+    console.log("💰 Seeding Subscription Options...");
+    const opts = await db.SubscriptionOption.bulkCreate([
+        // Free
+        { plan_id: planFree.id, duration_months: 120, price: 0, max_venues: 1, max_courts_per_venue: 3, features: { analytics: false, staff_management: false, custom_coupons: false } },
+        // Basic
+        { plan_id: planBasic.id, duration_months: 1, price: 100000, max_venues: 3, max_courts_per_venue: 10, features: { analytics: true, staff_management: true, custom_coupons: false } },
+        { plan_id: planBasic.id, duration_months: 6, price: 550000, max_venues: 3, max_courts_per_venue: 10, features: { analytics: true, staff_management: true, custom_coupons: false } },
+        { plan_id: planBasic.id, duration_months: 12, price: 1000000, max_venues: 3, max_courts_per_venue: 10, features: { analytics: true, staff_management: true, custom_coupons: false } },
+        // Premium
+        { plan_id: planPremium.id, duration_months: 1, price: 300000, max_venues: 10, max_courts_per_venue: 30, features: { analytics: true, staff_management: true, custom_coupons: true } },
+        { plan_id: planPremium.id, duration_months: 6, price: 1600000, max_venues: 10, max_courts_per_venue: 30, features: { analytics: true, staff_management: true, custom_coupons: true } },
+        { plan_id: planPremium.id, duration_months: 12, price: 3000000, max_venues: 10, max_courts_per_venue: 30, features: { analytics: true, staff_management: true, custom_coupons: true } },
     ]);
 
     const passwordHash = await bcrypt.hash("123456", 10);
     const admin = await db.User.create({
-      name: "Admin System",
-      email: "admin@pickleball.vn",
-      phone: "0900000001",
-      password_hash: passwordHash,
-      role: "admin",
+      name: "Admin System", email: "admin@pickleball.vn", phone: "0900000001", password_hash: passwordHash, role: "admin",
     });
 
     const ownerRecords = [];
@@ -166,16 +107,17 @@ async function seed() {
       const owner = await db.User.create({ ...o, password_hash: passwordHash, role: "owner", owner_status: "approved" });
       ownerRecords.push(owner);
 
-      // Assign PREMIUM plan to seed owners to allow more venues/courts
+      // Gán gói Premium mặc định cho Owners mẫu để họ tạo được nhiều sân
+      const premiumOpt = opts.find(o => o.plan_id === planPremium.id && o.duration_months === 12);
       await db.OwnerSubscription.create({
         owner_id: owner.id,
-        plan_id: plans[1].id, // Premium
+        plan_id: planPremium.id,
+        option_id: premiumOpt.id,
         start_date: new Date(),
         end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
         status: 'active'
       });
     }
-    console.log("👤 Users & Owners created with Subscription plans.");
 
     const venueRecords = [];
     for (let i = 0; i < VENUE_NAMES.length; i++) {
@@ -188,43 +130,26 @@ async function seed() {
           name: VENUE_NAMES[i],
           slug: slugify(VENUE_NAMES[i], `${i}-${Date.now().toString().slice(-4)}`),
           address: `${rand(1, 400)} Đường Phố, ${ward.ten}, ${province.ten_tinh}`,
-          province_id: province.ma_tinh,
-          ward_id: ward.ma,
-          latitude: 10 + Math.random() * 10,
-          longitude: 105 + Math.random() * 5,
+          province_id: province.ma_tinh, ward_id: ward.ma, latitude: 10 + Math.random() * 10, longitude: 105 + Math.random() * 5,
           description: `${VENUE_NAMES[i]} là địa điểm chuyên nghiệp.`,
           amenities: pickSome(AMENITIES_LIST, rand(3, 5)),
           phone: `09${rand(10, 99)}${rand(100000, 999999)}`,
-          default_price_morning: 80000,
-          default_price_afternoon: 100000,
-          default_price_evening: 120000,
-          default_price_weekend_surcharge: 10,
-          status: "active",
-          sort_order: i,
+          default_price_morning: 80000, default_price_afternoon: 100000, default_price_evening: 120000, default_price_weekend_surcharge: 10,
+          status: "active", sort_order: i,
         });
         venueRecords.push(venue);
     }
 
-    // COURTS & SLOTS
     for (const venue of venueRecords) {
       const numCourts = 3;
       for (let j = 1; j <= numCourts; j++) {
         const court = await db.Court.create({ venue_id: venue.id, name: `Sân ${j}`, type: "double", status: "active" });
         const slots = [];
         for (let d = 0; d < 2; d++) {
-          const dt = new Date();
-          dt.setDate(dt.getDate() + d);
+          const dt = new Date(); dt.setDate(dt.getDate() + d);
           const ds = dt.toISOString().split("T")[0];
           for (let h = 8; h < 20; h++) {
-            slots.push({
-              court_id: court.id,
-              venue_id: venue.id,
-              date: ds,
-              start_time: `${h}:00`,
-              end_time: `${h + 1}:00`,
-              price: 100000,
-              status: "available",
-            });
+            slots.push({ court_id: court.id, venue_id: venue.id, date: ds, start_time: `${h}:00`, end_time: `${h + 1}:00`, price: 100000, status: "available" });
           }
         }
         await db.TimeSlot.bulkCreate(slots);
@@ -233,7 +158,7 @@ async function seed() {
 
     await db.User.create({ name: "Test User", email: "user@pickleball.vn", phone: "0901234567", password_hash: passwordHash, role: "user" });
 
-    console.log("\n\n🎉 SEED COMPLETED WITH SUBSCRIPTION MODEL!");
+    console.log("\n\n🎉 SEED COMPLETED WITH FULL NORMALIZED SUBSCRIPTION MODEL!");
     process.exit(0);
   } catch (err) {
     console.error("💥 Seed failed:", err);
