@@ -67,6 +67,8 @@ Booking.hasMany(EquipmentRental, { foreignKey: 'booking_id', as: 'equipmentRenta
 
 // ---- Payment ----
 Payment.belongsTo(Booking, { foreignKey: 'booking_id', as: 'booking' });
+Payment.belongsTo(SubscriptionOption, { foreignKey: 'subscription_option_id', as: 'option' });
+Payment.belongsTo(User, { foreignKey: 'user_id', as: 'payer' });
 
 // ---- Review ----
 Review.belongsTo(User, { foreignKey: 'user_id', as: 'user' });

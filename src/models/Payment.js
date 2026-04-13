@@ -8,10 +8,27 @@ const Payment = sequelize.define('Payment', {
     primaryKey: true,
     autoIncrement: true,
   },
+  // Type identification
+  payment_type: {
+    type: DataTypes.ENUM('booking', 'subscription'),
+    allowNull: false,
+    defaultValue: 'booking'
+  },
+  // Optional relations
   booking_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
     references: { model: 'bookings', key: 'id' },
+  },
+  subscription_option_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'subscription_options', key: 'id' },
+  },
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: 'Payer user id'
   },
   amount: {
     type: DataTypes.DECIMAL(12, 0),
@@ -28,15 +45,7 @@ const Payment = sequelize.define('Payment', {
   transaction_id: {
     type: DataTypes.STRING(255),
     allowNull: true,
-    comment: 'External payment transaction ID',
-  },
-  refund_amount: {
-    type: DataTypes.DECIMAL(12, 0),
-    defaultValue: 0,
-  },
-  refund_at: {
-    type: DataTypes.DATE,
-    allowNull: true,
+    comment: 'External order code for VNPAY etc'
   },
   note: {
     type: DataTypes.STRING(500),
