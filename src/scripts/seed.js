@@ -24,7 +24,7 @@ function slugify(text) {
 async function seed() {
   const t = await db.sequelize.transaction();
   try {
-    console.log("🧹 Cleaning operational data...");
+    console.log("🧹 Cleaning old data...");
     await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 0', { transaction: t });
     await db.TimeSlot.destroy({ where: {}, truncate: true, transaction: t });
     await db.Booking.destroy({ where: {}, truncate: true, transaction: t });
@@ -46,7 +46,7 @@ async function seed() {
     const provinces = await db.Province.findAll({ limit: 10 });
 
     // 1. ADMIN, OWNERS, USERS
-    console.log("👤 Seeding 10 Owners and 40 Users...");
+    console.log("👤 Seeding Users...");
     await db.User.create({ name: "Admin", email: "admin@pickleball.vn", password_hash: passwordHash, role: "admin" }, { transaction: t });
     
     const owners = [];
@@ -58,82 +58,102 @@ async function seed() {
         users.push(await db.User.create({ name: randomName(), email: `user${i}@gmail.com`, password_hash: passwordHash, role: "user", wallet_balance: rand(500000, 2500000) }, { transaction: t }));
     }
 
-    // 2. SUBSCRIPTION PLANS & FULL OPTIONS
-    console.log("💎 Seeding Full Subscription Options and Features...");
-    const planFree = await db.SubscriptionPlan.create({ name: 'Gói Miễn Phí (Free)', description: 'Giải pháp cơ bản để bắt đầu.' }, { transaction: t });
-    const planPro = await db.SubscriptionPlan.create({ name: 'Gói Pro', description: 'Nâng tầm đẳng cấp vận hành.' }, { transaction: t });
-    const planUltra = await db.SubscriptionPlan.create({ name: 'Gói Ultra', description: 'Chuỗi cơ sở quy mô hiện đại.' }, { transaction: t });
+    // 2. SUBSCRIPTION PLANS
+    console.log("💎 Seeding Plans...");
+    const planFree = await db.SubscriptionPlan.create({ name: 'Gói Miễn Phí', description: 'Giải pháp cơ bản.' }, { transaction: t });
+    const planPro = await db.SubscriptionPlan.create({ name: 'Gói Pro', description: 'Nâng tầm đẳng cấp.' }, { transaction: t });
+    const planUltra = await db.SubscriptionPlan.create({ name: 'Gói Ultra', description: 'Chuỗi cơ sở quy mô.' }, { transaction: t });
 
     const proFeatures = { analytics: true, staff_management: true, custom_coupons: false };
     const ultraFeatures = { analytics: true, staff_management: true, custom_coupons: true };
     const freeFeatures = { analytics: false, staff_management: false, custom_coupons: false };
 
     const subOptions = await db.SubscriptionOption.bulkCreate([
-      // Free
       { plan_id: planFree.id, duration_months: 120, price: 0, max_venues: 1, max_courts_per_venue: 2, features: freeFeatures, is_active: true },
-      // Pro
-      { plan_id: planPro.id, duration_months: 1, price: 100000, max_venues: 5, max_courts_per_venue: 5, features: proFeatures, is_active: true },
-      { plan_id: planPro.id, duration_months: 12, price: 1000000, max_venues: 5, max_courts_per_venue: 5, features: proFeatures, is_active: true },
-      // Ultra
-      { plan_id: planUltra.id, duration_months: 1, price: 250000, max_venues: 15, max_courts_per_venue: 15, features: ultraFeatures, is_active: true },
-      { plan_id: planUltra.id, duration_months: 12, price: 2500000, max_venues: 15, max_courts_per_venue: 15, features: ultraFeatures, is_active: true }
+      { plan_id: planPro.id, duration_months: 1, price: 150000, max_venues: 5, max_courts_per_venue: 5, features: proFeatures, is_active: true },
+      { plan_id: planPro.id, duration_months: 12, price: 1500000, max_venues: 5, max_courts_per_venue: 5, features: proFeatures, is_active: true },
+      { plan_id: planUltra.id, duration_months: 1, price: 350000, max_venues: 15, max_courts_per_venue: 15, features: ultraFeatures, is_active: true },
+      { plan_id: planUltra.id, duration_months: 12, price: 3500000, max_venues: 15, max_courts_per_venue: 15, features: ultraFeatures, is_active: true }
     ], { transaction: t });
 
-    // Assign Subscriptions
-    const ownerSubAssignments = [];
-    for (let i = 0; i < owners.length; i++) {
-        // First owner free, others spread 
-        const opt = (i === 0) ? subOptions[0] : (i < 5 ? subOptions[2] : subOptions[4]);
-        const sub = await db.OwnerSubscription.create({ owner_id: owners[i].id, plan_id: opt.plan_id, option_id: opt.id, start_date: new Date(), end_date: new Date('2026-01-01'), status: 'active' }, { transaction: t });
-        sub.limit_venues = opt.max_venues;
-        sub.limit_courts = opt.max_courts_per_venue;
-        ownerSubAssignments.push(sub);
+    const ownerSubMeta = []; // To track limits for venues seeding
 
-        // CREATE PAYMENT RECORD FOR FINANCIAL REPORTS
-        if (opt.price > 0) {
-            await db.Payment.create({
-                user_id: owners[i].id,
-                subscription_option_id: opt.id,
-                payment_type: 'subscription',
-                amount: opt.price,
-                method: 'bank_transfer',
-                status: 'completed',
-                transaction_id: `SEED_SUB_${owners[i].id}_${opt.id}`,
-                note: `Thanh toán gói ${opt.id === 2 ? 'Pro' : 'Ultra'} (Hợp đồng mẫu)`
-            }, { transaction: t });
+    // Assign Subscriptions with history
+    console.log("💳 Seeding Subscription Histories...");
+    for (let i = 0; i < owners.length; i++) {
+        const owner = owners[i];
+        
+        if (i === 0) { // Owner 1: Expired Pro -> Active Ultra (Big History)
+            const optPro = subOptions[1]; // Pro Month
+            const optUltra = subOptions[4]; // Ultra Year
+            
+            const d1Start = new Date(); d1Start.setMonth(d1Start.getMonth() - 2);
+            const d1End = new Date(); d1End.setMonth(d1End.getMonth() - 1);
+            await db.OwnerSubscription.create({ owner_id: owner.id, plan_id: planPro.id, option_id: optPro.id, start_date: d1Start, end_date: d1End, status: 'expired' }, { transaction: t });
+            await db.Payment.create({ payment_type: 'subscription', subscription_option_id: optPro.id, user_id: owner.id, amount: optPro.price, method: 'vnpay', status: 'completed', transaction_id: `HIST_${owner.id}_1`, note: `Thanh toán ${planPro.name}`, createdAt: d1Start, updatedAt: d1Start }, { transaction: t, silent: true });
+
+            const d2Start = new Date(); d2Start.setDate(d2Start.getDate() - 5);
+            const d2End = new Date(); d2End.setFullYear(d2End.getFullYear() + 1);
+            await db.OwnerSubscription.create({ owner_id: owner.id, plan_id: planUltra.id, option_id: optUltra.id, start_date: d2Start, end_date: d2End, status: 'active' }, { transaction: t });
+            await db.Payment.create({ payment_type: 'subscription', subscription_option_id: optUltra.id, user_id: owner.id, amount: optUltra.price, method: 'vnpay', status: 'completed', transaction_id: `HIST_${owner.id}_2`, note: `Nâng cấp ${planUltra.name}`, createdAt: d2Start, updatedAt: d2Start }, { transaction: t, silent: true });
+            ownerSubMeta.push({ ownerId: owner.id, limitVenues: optUltra.max_venues, limitCourts: optUltra.max_courts_per_venue });
+
+        } else if (i === 1) { // Owner 2: Expired Pro -> Active Pro (Renewal)
+            const optPro = subOptions[1];
+            const d1Start = new Date(); d1Start.setMonth(d1Start.getMonth() - 1); d1Start.setDate(d1Start.getDate() - 5);
+            const d1End = new Date(); d1End.setDate(d1End.getDate() - 5);
+            await db.OwnerSubscription.create({ owner_id: owner.id, plan_id: planPro.id, option_id: optPro.id, start_date: d1Start, end_date: d1End, status: 'expired' }, { transaction: t });
+            await db.Payment.create({ payment_type: 'subscription', subscription_option_id: optPro.id, user_id: owner.id, amount: optPro.price, method: 'vnpay', status: 'completed', transaction_id: `RENEW_${owner.id}_1`, note: 'Giao dịch tháng trước', createdAt: d1Start, updatedAt: d1Start }, { transaction: t, silent: true });
+
+            const d2Start = new Date(); d2Start.setDate(d2Start.getDate() - 5);
+            const d2End = new Date(); d2End.setMonth(d2End.getMonth() + 1);
+            await db.OwnerSubscription.create({ owner_id: owner.id, plan_id: planPro.id, option_id: optPro.id, start_date: d2Start, end_date: d2End, status: 'active' }, { transaction: t });
+            await db.Payment.create({ payment_type: 'subscription', subscription_option_id: optPro.id, user_id: owner.id, amount: optPro.price, method: 'vnpay', status: 'completed', transaction_id: `RENEW_${owner.id}_2`, note: 'Gia hạn gói hiện tại', createdAt: d2Start, updatedAt: d2Start }, { transaction: t, silent: true });
+            ownerSubMeta.push({ ownerId: owner.id, limitVenues: optPro.max_venues, limitCourts: optPro.max_courts_per_venue });
+
+        } else if (i === 2) { // Owner 3: Only Expired (Free fallback)
+            const optPro = subOptions[1];
+            const dStart = new Date('2026-01-10');
+            const dEnd = new Date('2026-02-10');
+            await db.OwnerSubscription.create({ owner_id: owner.id, plan_id: planPro.id, option_id: optPro.id, start_date: dStart, end_date: dEnd, status: 'expired' }, { transaction: t });
+            await db.Payment.create({ payment_type: 'subscription', subscription_option_id: optPro.id, user_id: owner.id, amount: optPro.price, method: 'vnpay', status: 'completed', transaction_id: `EXP_${owner.id}`, note: 'Thanh toán cũ (Đã hết hạn)', createdAt: dStart, updatedAt: dStart }, { transaction: t, silent: true });
+            ownerSubMeta.push({ ownerId: owner.id, limitVenues: 1, limitCourts: 2 }); // Free limits
+        } else {
+            const opt = (i < 6) ? subOptions[1] : subOptions[3];
+            const startDate = new Date();
+            const endDate = new Date();
+            endDate.setMonth(startDate.getMonth() + opt.duration_months);
+
+            await db.OwnerSubscription.create({ owner_id: owner.id, plan_id: opt.plan_id, option_id: opt.id, start_date: startDate, end_date: endDate, status: 'active' }, { transaction: t });
+            await db.Payment.create({ payment_type: 'subscription', subscription_option_id: opt.id, user_id: owner.id, amount: opt.price, method: 'vnpay', status: 'completed', transaction_id: `SUB_${owner.id}`, note: `Kích hoạt gói mới`, createdAt: startDate, updatedAt: startDate }, { transaction: t, silent: true });
+            ownerSubMeta.push({ ownerId: owner.id, limitVenues: opt.max_venues, limitCourts: opt.max_courts_per_venue });
         }
     }
 
-    // 3. VENUES & COURTS respecting limits
-    console.log("🏟️ Seeding Venues and Courts with Limit Checks...");
+    // 3. VENUES
+    console.log("🏟️ Seeding Venues...");
     const venuePrefixes = ["Pickle", "Elite", "Pro", "Star", "Legend", "Mega"];
     const courtsList = [];
 
     for (let i = 0; i < owners.length; i++) {
-        const sub = ownerSubAssignments[i];
-        const vCountLimit = sub.limit_venues;
-        const cCountLimit = sub.limit_courts;
-
-        // Randomize count up to limit
-        const actualVCount = (sub.option_id === subOptions[0].id) ? 1 : rand(1, Math.min(vCountLimit, 3));
+        const meta = ownerSubMeta[i];
+        const actualVCount = rand(1, Math.min(meta.limitVenues, 3));
         for (let v = 0; v < actualVCount; v++) {
             const province = provinces[rand(0, provinces.length - 1)];
             const ward = await db.Ward.findOne({ where: { province_ma: province.ma_tinh } });
             const vName = `${venuePrefixes[rand(0, venuePrefixes.length-1)]} Hub - ${province.ten_tinh} #${v+1}`;
-
             const venue = await db.Venue.create({
                 owner_id: owners[i].id, name: vName, slug: `${slugify(vName)}-${Date.now().toString().slice(-4)}${i}${v}`,
                 address: `Số ${rand(1, 999)}, ${ward ? ward.ten : 'P. Pickle'}, ${province.ten_tinh}`,
                 province_id: province.ma_tinh, ward_id: ward ? ward.ma : null,
                 latitude: randFloat(10, 21), longitude: randFloat(105, 108), status: 'active',
-                default_price_morning: 100000, default_price_afternoon: 150000, default_price_evening: 250000,
-                default_price_weekend_surcharge: 20
+                default_price_morning: 100000, default_price_afternoon: 150000, default_price_evening: 250000
             }, { transaction: t });
 
-            const actualCCount = (sub.option_id === subOptions[0].id) ? 2 : rand(2, cCountLimit);
+            const actualCCount = rand(2, meta.limitCourts);
             for (let c = 1; c <= actualCCount; c++) {
                 courtsList.push(await db.Court.create({
-                    venue_id: venue.id, name: `Sân thi đấu ${c}`, type: 'double',
+                    venue_id: venue.id, name: `Sân ${c}`, type: 'double',
                     price_morning: 100000, price_afternoon: 150000, price_evening: 250000, status: 'active'
                 }, { transaction: t }));
             }
@@ -141,44 +161,56 @@ async function seed() {
     }
 
     // 4. BOOKINGS
-    console.log("📅 Generating 600+ Bookings for massive reports...");
+    console.log("📅 Generating 650+ Bookings...");
     const bStatuses = ['completed', 'completed', 'completed', 'completed', 'cancelled', 'checked_in'];
     const now = new Date();
+    
     for (let i = 0; i < 650; i++) {
         const user = users[rand(0, users.length - 1)];
         const court = courtsList[rand(0, courtsList.length - 1)];
-        const status = bStatuses[rand(0, bStatuses.length - 1)];
-        const bDate = new Date(); bDate.setDate(now.getDate() - rand(0, 120));
+        const bStatus = bStatuses[rand(0, bStatuses.length - 1)];
+        const daysBack = (Math.random() < 0.6) ? rand(0, 6) : rand(7, 120);
+        const bDate = new Date(); bDate.setDate(now.getDate() - daysBack);
         const hour = rand(6, 21); bDate.setHours(hour, 0, 0, 0);
         const dur = rand(1, 2);
         const totalPrice = 120000 * dur;
 
         const booking = await db.Booking.create({
-            user_id: user.id, venue_id: court.venue_id, booking_code: `PB${Date.now().toString().slice(-6)}${i}`,
-            booking_type: 'online', status: status, total_price: totalPrice,
-            payment_status: (status === 'completed' || status === 'checked_in') ? 'paid' : 'unpaid',
-            payment_method: 'wallet', created_at: bDate, updated_at: bDate
-        }, { transaction: t });
+            user_id: user.id, venue_id: court.venue_id, booking_code: `BK${Date.now().toString().slice(-6)}${i}`,
+            booking_type: 'online', status: bStatus, total_price: totalPrice,
+            payment_status: (bStatus === 'completed' || bStatus === 'checked_in') ? 'paid' : 'unpaid',
+            payment_method: 'wallet',
+            createdAt: bDate,
+            updatedAt: bDate
+        }, { transaction: t, silent: true });
 
         for (let h = 0; h < dur; h++) {
             await db.TimeSlot.create({
                 court_id: court.id, venue_id: court.venue_id, booking_id: booking.id,
                 date: bDate.toISOString().split('T')[0], start_time: `${(hour+h).toString().padStart(2, '0')}:00:00`,
                 end_time: `${(hour+h+1).toString().padStart(2, '0')}:00:00`, price: 120000,
-                status: status === 'cancelled' ? 'available' : 'booked', created_at: bDate
-            }, { transaction: t });
+                status: bStatus === 'cancelled' ? 'available' : 'booked',
+                createdAt: bDate,
+                updatedAt: bDate
+            }, { transaction: t, silent: true });
         }
-        if (status === 'completed' || status === 'checked_in') {
-            await db.Payment.create({ booking_id: booking.id, user_id: user.id, amount: totalPrice, method: 'wallet', status: 'completed', transaction_id: `PXID${Date.now()}${i}`, created_at: bDate }, { transaction: t });
+        if (bStatus === 'completed' || bStatus === 'checked_in') {
+            await db.Payment.create({ 
+                booking_id: booking.id, user_id: user.id, amount: totalPrice, 
+                method: 'wallet', status: 'completed', 
+                transaction_id: `PXID${Date.now()}${i}`,
+                createdAt: bDate,
+                updatedAt: bDate
+            }, { transaction: t, silent: true });
         }
     }
 
     await t.commit();
-    console.log("\n🚀 DATABASE FULLY SEEDED WITH ALL OPTIONS AND FEATURES!");
+    console.log("\n🚀 DATABASE SYNCED SUCCESSFULLY!");
     process.exit(0);
   } catch (err) {
     if (!t.finished) await t.rollback();
-    console.error("💥 Seed failed:", err);
+    console.error("💥 Seed error:", err);
     process.exit(1);
   }
 }

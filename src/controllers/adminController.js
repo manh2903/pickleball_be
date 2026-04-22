@@ -35,6 +35,28 @@ const adminGetStats = async (req, res, next) => {
       order: [["created_at", "DESC"]],
     });
 
+    // 3. Trends for Chart (Last 7 days)
+    const sevenDaysTrend = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const start = new Date(d.setHours(0, 0, 0, 0));
+      const end = new Date(d.setHours(23, 59, 59, 999));
+
+      const dailyBooking = await db.Booking.sum("total_price", {
+        where: { created_at: { [Op.between]: [start, end] }, status: { [Op.ne]: "cancelled" }, payment_status: "paid" }
+      });
+      const dailySub = await db.Payment.sum("amount", {
+        where: { created_at: { [Op.between]: [start, end] }, payment_type: "subscription", status: "completed" }
+      });
+
+      sevenDaysTrend.push({
+        date: d.toLocaleDateString("vi-VN", { weekday: 'short', day: 'numeric', month: 'short' }),
+        bookingRevenue: Number(dailyBooking || 0),
+        subscriptionRevenue: Number(dailySub || 0)
+      });
+    }
+
     res.json({
       success: true,
       data: { 
@@ -43,7 +65,8 @@ const adminGetStats = async (req, res, next) => {
         activeVenues, 
         totalBookings, 
         newUsers, 
-        recentVenues 
+        recentVenues,
+        revenueTrend: sevenDaysTrend
       },
     });
   } catch (err) {
@@ -56,7 +79,7 @@ const adminGetStats = async (req, res, next) => {
  */
 const adminGetUsers = async (req, res, next) => {
   try {
-    const { role, status, search, page = 1, limit = 20 } = req.query;
+    const { role, status, search, planId, page = 1, limit = 20 } = req.query;
     const where = {};
     if (role) where.role = role;
     if (status) where.status = status;
@@ -64,10 +87,43 @@ const adminGetUsers = async (req, res, next) => {
       where[Op.or] = [{ name: { [Op.like]: `%${search}%` } }, { email: { [Op.like]: `%${search}%` } }, { phone: { [Op.like]: `%${search}%` } }];
     }
 
+    let includeWhere = { status: 'active' };
+    let userWhere = { ...where };
+
+    if (planId) {
+        if (planId === '1') {
+            // "Free" means their active subscription plan is NOT Pro(2) or Ultra(3)
+            // OR they simply don't have any active subscription record
+            userWhere[Op.or] = [
+                { '$activeSubscription.plan_id$': { [Op.notIn]: [2, 3] } },
+                { '$activeSubscription.id$': null }
+            ];
+        } else {
+            userWhere['$activeSubscription.plan_id$'] = planId;
+            includeWhere.plan_id = planId;
+        }
+    }
+
     const { count, rows } = await db.User.findAndCountAll({
-      where,
+      where: userWhere,
       attributes: { exclude: ["password_hash", "refresh_token"] },
+      include: [
+        {
+          model: db.OwnerSubscription,
+          as: 'activeSubscription',
+          required: false, // Must be false to find users with NULL subscription
+          where: includeWhere,
+          include: [
+            {
+              model: db.SubscriptionOption,
+              as: 'option',
+              include: [{ model: db.SubscriptionPlan, as: 'plan', attributes: ['name'] }]
+            }
+          ]
+        }
+      ],
       order: [["created_at", "DESC"]],
+      distinct: true,
       limit: parseInt(limit),
       offset: (parseInt(page) - 1) * parseInt(limit),
     });
@@ -204,6 +260,52 @@ const adminGetUserDetail = async (req, res, next) => {
       // Count venues
       const venueCount = await db.Venue.count({ where: { owner_id: id } });
       detail.venueCount = venueCount;
+
+      // Get subscription history with associated payment info
+      const histories = await db.OwnerSubscription.findAll({
+        where: { owner_id: id },
+        include: [
+            { 
+                model: db.SubscriptionOption, 
+                as: 'option',
+                include: [{ model: db.SubscriptionPlan, as: 'plan', attributes: ['name'] }]
+            }
+        ],
+        order: [['created_at', 'DESC']],
+        limit: 10
+      });
+
+      // Manually find the matching payment for each subscription record to show "how much they paid"
+      const historiesWithPayment = await Promise.all(histories.map(async (h) => {
+          const hObj = h.toJSON();
+          const targetDate = h.createdAt || h.created_at;
+          
+          if (!targetDate) {
+              hObj.amount_paid = h.option?.price || 0;
+              hObj.payment_method = null;
+              return hObj;
+          }
+
+          const payment = await db.Payment.findOne({
+              where: {
+                  user_id: id,
+                  subscription_option_id: h.option_id,
+                  payment_type: 'subscription',
+                  // Find a payment created around the same time as the subscription record (+/- 1 minute)
+                  created_at: {
+                      [Op.between]: [
+                          new Date(new Date(targetDate).getTime() - 60000),
+                          new Date(new Date(targetDate).getTime() + 60000)
+                      ]
+                  }
+              }
+          });
+          hObj.amount_paid = payment ? payment.amount : (h.option?.price || 0);
+          hObj.payment_method = payment ? payment.method : null;
+          return hObj;
+      }));
+
+      detail.subscriptionHistory = historiesWithPayment;
     } else if (user.role === 'user') {
       // Get recent bookings
       const bookings = await db.Booking.findAll({

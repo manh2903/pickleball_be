@@ -34,6 +34,7 @@ User.hasMany(Shift, { foreignKey: 'staff_id', as: 'shifts' });
 User.hasMany(Incident, { foreignKey: 'reported_by', as: 'reportedIncidents' });
 User.hasMany(WithdrawalRequest, { foreignKey: 'owner_id', as: 'withdrawals' });
 User.hasMany(OwnerSubscription, { foreignKey: 'owner_id', as: 'subscriptions' });
+User.hasOne(OwnerSubscription, { foreignKey: 'owner_id', as: 'activeSubscription' });
 
 // ---- Venue ----
 Venue.belongsTo(User, { foreignKey: 'owner_id', as: 'owner' });
