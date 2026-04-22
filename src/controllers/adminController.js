@@ -151,12 +151,12 @@ const adminGetSubscriptionPayments = async (req, res, next) => {
       include: [
         { 
           model: db.User, 
-          as: 'user', 
+          as: 'payer', 
           attributes: ['id', 'name', 'email', 'phone'] 
         },
         { 
           model: db.SubscriptionOption, 
-          as: 'subscriptionOption', 
+          as: 'option', 
           include: [{ model: db.SubscriptionPlan, as: 'plan', attributes: ['name'] }]
         }
       ],

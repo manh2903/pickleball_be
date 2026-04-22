@@ -88,6 +88,20 @@ async function seed() {
         sub.limit_venues = opt.max_venues;
         sub.limit_courts = opt.max_courts_per_venue;
         ownerSubAssignments.push(sub);
+
+        // CREATE PAYMENT RECORD FOR FINANCIAL REPORTS
+        if (opt.price > 0) {
+            await db.Payment.create({
+                user_id: owners[i].id,
+                subscription_option_id: opt.id,
+                payment_type: 'subscription',
+                amount: opt.price,
+                method: 'bank_transfer',
+                status: 'completed',
+                transaction_id: `SEED_SUB_${owners[i].id}_${opt.id}`,
+                note: `Thanh toán gói ${opt.id === 2 ? 'Pro' : 'Ultra'} (Hợp đồng mẫu)`
+            }, { transaction: t });
+        }
     }
 
     // 3. VENUES & COURTS respecting limits
