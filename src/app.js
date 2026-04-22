@@ -10,6 +10,7 @@ const path = require('path');
 const db = require('./models');
 const routes = require('./routes');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
+const { initCronJobs } = require('./services/cronService');
 
 const app = express();
 const server = http.createServer(app);
@@ -111,6 +112,7 @@ db.sequelize.authenticate()
     }
     server.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
+      initCronJobs();
     });
   })
   .catch((err) => {

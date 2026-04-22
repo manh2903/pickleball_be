@@ -13,10 +13,12 @@ router.post('/validate', validateCoupon);
 // All following routes require authentication
 router.use(authenticate);
 
+const { checkFeature } = require('../middleware/subscriptionMiddleware');
+
 // Owner routes
-router.get('/owner', authorize('owner'), getOwnerCoupons);
-router.post('/owner', authorize('owner'), createCoupon);
-router.put('/owner/:id/status', authorize('owner'), updateCouponStatus);
+router.get('/owner', authorize('owner'), checkFeature('custom_coupons'), getOwnerCoupons);
+router.post('/owner', authorize('owner'), checkFeature('custom_coupons'), createCoupon);
+router.put('/owner/:id/status', authorize('owner'), checkFeature('custom_coupons'), updateCouponStatus);
 
 // Admin routes
 router.get('/admin', authorize('admin'), adminGetAllCoupons);

@@ -30,13 +30,14 @@ const sanitizeUser = (user) => {
 const getUserWithBalances = async (userRecord) => {
   const safeUser = sanitizeUser(userRecord);
   let pending_balance = 0;
+  let pending_withdrawal_all = 0;
   
   if (safeUser.role === 'owner') {
     const venues = await db.Venue.findAll({ where: { owner_id: safeUser.id }, attributes: ['id'] });
     const venueIds = venues.map(v => v.id);
     
     if (venueIds.length > 0) {
-      pending_balance = await db.Booking.sum('total_price', {
+      pending_balance = await db.Booking.sum('owner_revenue', {
         where: {
           venue_id: { [Op.in]: venueIds },
           status: 'confirmed', // Đang giữ chờ khách đánh xong
@@ -44,9 +45,18 @@ const getUserWithBalances = async (userRecord) => {
         }
       }) || 0;
     }
+
+    // New: Calculate pending withdrawals (requests that are not completed or rejected)
+    pending_withdrawal_all = await db.WithdrawalRequest.sum('amount', {
+      where: {
+        owner_id: safeUser.id,
+        status: { [Op.in]: ['pending', 'processing'] }
+      }
+    }) || 0;
   }
   
   safeUser.pending_balance = pending_balance;
+  safeUser.pending_withdrawal_balance = pending_withdrawal_all;
   safeUser.available_balance = Math.max(0, (safeUser.wallet_balance || 0) - pending_balance);
   return safeUser;
 };

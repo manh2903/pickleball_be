@@ -213,7 +213,7 @@ const getRevenueAnalytics = async (req, res, next) => {
     const dailyRaw = await db.Booking.findAll({
       attributes: [
         [db.sequelize.fn('DATE', db.sequelize.col('Booking.created_at')), 'date'],
-        [db.sequelize.fn('SUM', db.sequelize.col('total_price')), 'revenue'],
+        [db.sequelize.fn('SUM', db.sequelize.col('owner_revenue')), 'revenue'],
         [db.sequelize.fn('COUNT', db.sequelize.col('Booking.id')), 'count'],
       ],
       where: { ...baseWhere, created_at: { [Op.gte]: thirtyDaysAgo } },
@@ -239,7 +239,7 @@ const getRevenueAnalytics = async (req, res, next) => {
     const monthlyRaw = await db.Booking.findAll({
       attributes: [
         [db.sequelize.fn('DATE_FORMAT', db.sequelize.col('Booking.created_at'), '%Y-%m'), 'month'],
-        [db.sequelize.fn('SUM', db.sequelize.col('total_price')), 'revenue'],
+        [db.sequelize.fn('SUM', db.sequelize.col('owner_revenue')), 'revenue'],
         [db.sequelize.fn('COUNT', db.sequelize.col('Booking.id')), 'count'],
       ],
       where: { ...baseWhere, created_at: { [Op.gte]: twelveMonthsAgo } },
@@ -258,7 +258,7 @@ const getRevenueAnalytics = async (req, res, next) => {
     }
 
     // 3. Summary stats
-    const totalRevenue = await db.Booking.sum('total_price', { where: baseWhere }) || 0;
+    const totalRevenue = await db.Booking.sum('owner_revenue', { where: baseWhere }) || 0;
     const totalBookings = await db.Booking.count({ where: baseWhere });
 
     // 4. Booking type breakdown (online vs walkin)
