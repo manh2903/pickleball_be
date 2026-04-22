@@ -6,6 +6,7 @@ const subscriptionController = require('../controllers/subscriptionController');
 // Public
 router.get('/plans', subscriptionController.getPlans);
 router.get('/vnpay_return', subscriptionController.vnpayReturn);
+router.get('/vnpay_ipn', subscriptionController.vnpayIPN);
 
 // Owner
 router.get('/my', authenticate, authorize('owner', 'staff'), subscriptionController.getMySubscription);
