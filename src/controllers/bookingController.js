@@ -396,7 +396,11 @@ const confirmPayment = async (req, res, next) => {
     const venue = await db.Venue.findByPk(booking.venue_id);
     if (!venue) throw new ApiError(404, "Không tìm thấy venue");
 
-    if (venue.owner_id !== req.user.id && req.user.role !== "admin" && req.user.role !== "staff") {
+    const isOwner = venue.owner_id === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+    const isStaff = req.user.role === 'staff' && booking.venue_id === req.user.venue_id;
+
+    if (!isOwner && !isAdmin && !isStaff) {
       throw new ApiError(403, "Bạn không có quyền xác nhận thanh toán này");
     }
 
@@ -502,11 +506,11 @@ const getBookingById = async (req, res, next) => {
 
     if (!booking) throw new ApiError(404, "Không tìm thấy booking");
 
-    // Privacy Check: User can see their own, Owner sees their venue's, Admin sees all
-    const isOwner = booking.slots?.[0]?.court?.venue?.owner_id == req.user?.id;
+    // Privacy Check: User can see their own, Owner sees their venue's, Admin sees all, Staff sees their venue's
+    const isOwner = booking.venue?.owner_id == req.user?.id;
     const isUser = booking.user_id == req.user?.id;
     const isAdmin = req.user?.role === "admin";
-    const isStaff = req.user?.role === "staff";
+    const isStaff = req.user?.role === "staff" && booking.venue_id == req.user?.venue_id;
 
     if (!isUser && !isOwner && !isAdmin && !isStaff) {
       console.log("❌ Privacy Check Failed for Booking:", booking.booking_code);
@@ -530,12 +534,19 @@ const cancelBooking = async (req, res, next) => {
       include: [
         { model: db.TimeSlot, as: 'slots', attributes: ['date', 'start_time'] },
         { model: db.User, as: 'user', attributes: ['id', 'name', 'email'] },
+        { model: db.Venue, as: 'venue', attributes: ['id', 'owner_id'] },
       ],
       transaction: t,
     });
 
     if (!booking) throw new ApiError(404, 'Không tìm thấy booking');
-    if (booking.user_id !== req.user.id && req.user.role !== 'admin')
+
+    const isOwner = booking.venue?.owner_id === req.user.id;
+    const isStaff = req.user.role === 'staff' && booking.venue_id === req.user.venue_id;
+    const isUser = booking.user_id === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isUser && !isAdmin && !isOwner && !isStaff)
       throw new ApiError(403, 'Bạn không có quyền hủy đặt sân này');
     if (booking.status === 'cancelled') throw new ApiError(400, 'Đặt sân này đã bị hủy trước đó');
     if (booking.status === 'checked_in') throw new ApiError(400, 'Không thể hủy đặt sân đã check-in');
@@ -549,8 +560,8 @@ const cancelBooking = async (req, res, next) => {
       console.warn('[cancelBooking] Cannot read cancel_buffer_hours, using default 2h');
     }
 
-    // 2. Validate cancellation window (admin bypasses this, or unpaid bookings)
-    if (req.user.role !== 'admin' && booking.payment_status !== 'unpaid') {
+    // 2. Validate cancellation window (admin/owner/staff bypasses this, or unpaid bookings)
+    if (req.user.role !== 'admin' && req.user.role !== 'owner' && req.user.role !== 'staff' && booking.payment_status !== 'unpaid') {
       const firstSlot = booking.slots?.[0];
       if (firstSlot) {
         const slotDate = firstSlot.date.toString().split('T')[0];
@@ -742,7 +753,13 @@ const ownerGetVenueBookings = async (req, res, next) => {
 
     // 1. Determine venues context
     let venueIds = [];
-    if (venue_id) {
+    if (req.user.role === 'staff') {
+      const staffVenueId = req.user.venue_id;
+      if (venue_id && venue_id.toString() !== staffVenueId?.toString()) {
+        throw new ApiError(403, "Không có quyền truy cập cơ sở này");
+      }
+      venueIds = staffVenueId ? [staffVenueId] : [];
+    } else if (venue_id) {
       // Verify ownership/staff access
       const v = await db.Venue.findOne({ where: { id: venue_id, owner_id: req.user.id } });
       if (!v && req.user.role !== "admin") throw new ApiError(403, "Không có quyền truy cập cơ sở này");

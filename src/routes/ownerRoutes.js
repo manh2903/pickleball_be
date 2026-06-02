@@ -9,9 +9,9 @@ const { ownerGetCourts, createCourt, updateCourt, deleteCourt } = require('../co
 const { getVenueReviewsForOwner } = require('../controllers/reviewController');
 const upload = require('../middleware/uploadMiddleware');
 
-// All routes here require 'owner' role
+// All routes here require 'owner' or 'staff' role
 router.use(authenticate);
-router.use(authorize('owner'));
+router.use(authorize('owner', 'staff'));
 
 // === Statistics ===
 router.get('/stats', getStats);

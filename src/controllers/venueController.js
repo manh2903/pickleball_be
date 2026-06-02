@@ -149,8 +149,12 @@ const getVenueById = async (req, res, next) => {
  */
 const getOwnerVenues = async (req, res, next) => {
   try {
+    const where = req.user.role === 'staff'
+      ? { id: req.user.venue_id || null }
+      : { owner_id: req.user.id };
+
     const venues = await db.Venue.findAll({
-      where: { owner_id: req.user.id },
+      where,
       include: [
         { model: db.Court, as: 'courts', attributes: ['id', 'name', 'type', 'status'] },
         { model: db.Province, as: 'provinceState', attributes: ['ten_tinh'] },
@@ -219,8 +223,12 @@ const createVenue = async (req, res, next) => {
  */
 const getOwnerVenueById = async (req, res, next) => {
   try {
+    const where = req.user.role === 'staff'
+      ? { id: req.params.id, id: req.user.venue_id || null }
+      : { id: req.params.id, owner_id: req.user.id };
+
     const venue = await db.Venue.findOne({
-      where: { id: req.params.id, owner_id: req.user.id },
+      where,
       include: [
         { model: db.Court, as: 'courts' },
       ],

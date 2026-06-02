@@ -2,11 +2,22 @@ const db = require('../models');
 const { Op } = require('sequelize');
 
 /**
- * Gets the active subscription of an owner
- * @param {number} ownerId 
+ * Gets the active subscription of an owner or staff
+ * @param {number} userId 
  * @returns {Object|null}
  */
-const getActiveSubscription = async (ownerId) => {
+const getActiveSubscription = async (userId) => {
+  const user = await db.User.findByPk(userId);
+  if (!user) return null;
+
+  let ownerId = userId;
+  if (user.role === 'staff' && user.venue_id) {
+    const venue = await db.Venue.findByPk(user.venue_id);
+    if (venue) {
+      ownerId = venue.owner_id;
+    }
+  }
+
   const sub = await db.OwnerSubscription.findOne({
     where: {
       owner_id: ownerId,

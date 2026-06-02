@@ -10,9 +10,14 @@ const getStats = async (req, res, next) => {
   try {
     const ownerId = req.user.id;
     
-    // 1. Get owner's venue(s)
+    // 1. Get owner's or staff's venue(s)
     const { venue_id: queryVenueId } = req.query;
-    const whereVenue = { owner_id: ownerId };
+    let whereVenue = {};
+    if (req.user.role === 'staff') {
+      whereVenue = { id: req.user.venue_id || null };
+    } else {
+      whereVenue = { owner_id: ownerId };
+    }
     if (queryVenueId) whereVenue.id = queryVenueId;
 
     const venues = await db.Venue.findAll({

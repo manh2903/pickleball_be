@@ -3,10 +3,18 @@ const { ApiError } = require('../middleware/errorMiddleware');
 const { Op } = require('sequelize');
 
 /**
- * Verify owner has access to this venue
+ * Verify owner/staff has access to this venue
  */
-const assertOwnsVenue = async (ownerId, venueId) => {
-  const venue = await db.Venue.findOne({ where: { id: venueId, owner_id: ownerId } });
+const assertOwnsVenue = async (user, venueId) => {
+  let venue;
+  if (user.role === 'staff') {
+    if (user.venue_id?.toString() !== venueId.toString()) {
+      throw new ApiError(403, 'Bạn không có quyền quản lý địa điểm này');
+    }
+    venue = await db.Venue.findByPk(venueId);
+  } else {
+    venue = await db.Venue.findOne({ where: { id: venueId, owner_id: user.id } });
+  }
   if (!venue) throw new ApiError(403, 'Bạn không có quyền quản lý địa điểm này');
   return venue;
 };
@@ -80,7 +88,7 @@ const getCourtById = async (req, res, next) => {
  */
 const ownerGetCourts = async (req, res, next) => {
   try {
-    await assertOwnsVenue(req.user.id, req.params.venueId);
+    await assertOwnsVenue(req.user, req.params.venueId);
     const courts = await db.Court.findAll({
       where: { venue_id: req.params.venueId },
       order: [['sort_order', 'ASC']],
@@ -98,7 +106,10 @@ const { canCreateCourt } = require('../utils/subscriptionHelper');
  */
 const createCourt = async (req, res, next) => {
   try {
-    const venue = await assertOwnsVenue(req.user.id, req.params.venueId);
+    if (req.user.role === 'staff') {
+      throw new ApiError(403, 'Nhân viên không có quyền tạo sân mới');
+    }
+    const venue = await assertOwnsVenue(req.user, req.params.venueId);
     
     const allowed = await canCreateCourt(req.user.id, venue.id);
     if (!allowed) {
@@ -134,7 +145,10 @@ const createCourt = async (req, res, next) => {
  */
 const updateCourt = async (req, res, next) => {
   try {
-    await assertOwnsVenue(req.user.id, req.params.venueId);
+    if (req.user.role === 'staff') {
+      throw new ApiError(403, 'Nhân viên không có quyền chỉnh sửa sân');
+    }
+    await assertOwnsVenue(req.user, req.params.venueId);
     const court = await db.Court.findOne({
       where: { id: req.params.id, venue_id: req.params.venueId },
     });
@@ -153,7 +167,10 @@ const updateCourt = async (req, res, next) => {
  */
 const deleteCourt = async (req, res, next) => {
   try {
-    await assertOwnsVenue(req.user.id, req.params.venueId);
+    if (req.user.role === 'staff') {
+      throw new ApiError(403, 'Nhân viên không có quyền xóa sân');
+    }
+    await assertOwnsVenue(req.user, req.params.venueId);
     const court = await db.Court.findOne({
       where: { id: req.params.id, venue_id: req.params.venueId },
     });
@@ -170,7 +187,10 @@ const deleteCourt = async (req, res, next) => {
  */
 const setCourtMaintenance = async (req, res, next) => {
   try {
-    await assertOwnsVenue(req.user.id, req.params.venueId);
+    if (req.user.role === 'staff') {
+      throw new ApiError(403, 'Nhân viên không có quyền thay đổi trạng thái hoạt động của sân');
+    }
+    await assertOwnsVenue(req.user, req.params.venueId);
     const court = await db.Court.findOne({
       where: { id: req.params.id, venue_id: req.params.venueId },
     });
