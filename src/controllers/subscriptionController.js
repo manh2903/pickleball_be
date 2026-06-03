@@ -1,4 +1,5 @@
 const db = require('../models');
+const { Op } = require('sequelize');
 const { ApiError } = require('../middleware/errorMiddleware');
 const { getActiveSubscription } = require('../utils/subscriptionHelper');
 const vnpay = require('../utils/vnpay');
@@ -147,6 +148,37 @@ const vnpayIPN = async (req, res, next) => {
     } catch(err) { next(err); }
 };
 
+const adminGetPlans = async (req, res, next) => {
+  try {
+    const plans = await db.SubscriptionPlan.findAll({
+      include: [{ 
+        model: db.SubscriptionOption, 
+        as: 'options' 
+      }],
+      order: [['id', 'ASC']]
+    });
+
+    const plansWithActiveCount = await Promise.all(plans.map(async (plan) => {
+      const planJson = plan.toJSON();
+      if (planJson.options) {
+        planJson.options = await Promise.all(planJson.options.map(async (opt) => {
+          const activeCount = await db.OwnerSubscription.count({
+            where: {
+              option_id: opt.id,
+              status: 'active',
+              end_date: { [Op.gt]: new Date() }
+            }
+          });
+          return { ...opt, activeUserCount: activeCount };
+        }));
+      }
+      return planJson;
+    }));
+
+    res.json({ success: true, data: plansWithActiveCount });
+  } catch (err) { next(err); }
+};
+
 const adminCreatePlan = async (req, res, next) => {
   try {
     const plan = await db.SubscriptionPlan.create(req.body);
@@ -163,12 +195,70 @@ const adminUpdatePlan = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const adminCreateOption = async (req, res, next) => {
+  try {
+    const plan = await db.SubscriptionPlan.findByPk(req.body.plan_id);
+    if (plan && plan.name === 'Gói Miễn Phí') {
+      throw new ApiError(400, 'Không thể thêm kỳ hạn mới cho Gói Miễn Phí.');
+    }
+    const option = await db.SubscriptionOption.create(req.body);
+    res.status(201).json({ success: true, data: option });
+  } catch (err) { next(err); }
+};
+
 const adminUpdateOption = async (req, res, next) => {
   try {
-    const option = await db.SubscriptionOption.findByPk(req.params.id, { include: [{ model: db.SubscriptionPlan, as: 'plan' }] });
+    const option = await db.SubscriptionOption.findByPk(req.params.id, {
+      include: [{ model: db.SubscriptionPlan, as: 'plan' }]
+    });
     if (!option) throw new ApiError(404, 'Không tìm thấy tùy chọn gói');
+
+    if (option.plan && option.plan.name === 'Gói Miễn Phí' && req.body.is_active === false) {
+      throw new ApiError(400, 'Không thể tắt tùy chọn của Gói Miễn Phí.');
+    }
+
+    const activeCount = await db.OwnerSubscription.count({
+      where: {
+        option_id: option.id,
+        status: 'active',
+        end_date: { [Op.gt]: new Date() }
+      }
+    });
+
+    if (activeCount > 0) {
+      throw new ApiError(400, 'Không thể chỉnh sửa hoặc tắt tùy chọn gói này vì đang có người dùng sử dụng.');
+    }
+
     await option.update(req.body);
     res.json({ success: true, data: option });
+  } catch (err) { next(err); }
+};
+
+const adminDeleteOption = async (req, res, next) => {
+  try {
+    const option = await db.SubscriptionOption.findByPk(req.params.id, {
+      include: [{ model: db.SubscriptionPlan, as: 'plan' }]
+    });
+    if (!option) throw new ApiError(404, 'Không tìm thấy tùy chọn gói');
+
+    if (option.plan && option.plan.name === 'Gói Miễn Phí') {
+      throw new ApiError(400, 'Không thể xóa tùy chọn của Gói Miễn Phí.');
+    }
+
+    const activeCount = await db.OwnerSubscription.count({
+      where: {
+        option_id: option.id,
+        status: 'active',
+        end_date: { [Op.gt]: new Date() }
+      }
+    });
+
+    if (activeCount > 0) {
+      throw new ApiError(400, 'Không thể xóa tùy chọn gói này vì đang có người dùng sử dụng.');
+    }
+
+    await option.destroy();
+    res.json({ success: true, message: 'Đã xóa tùy chọn gói thành công' });
   } catch (err) { next(err); }
 };
 
@@ -178,7 +268,10 @@ module.exports = {
   purchasePlan,
   vnpayReturn,
   vnpayIPN,
+  adminGetPlans,
   adminCreatePlan,
   adminUpdatePlan,
-  adminUpdateOption
+  adminCreateOption,
+  adminUpdateOption,
+  adminDeleteOption
 };

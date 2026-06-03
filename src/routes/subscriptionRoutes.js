@@ -13,8 +13,11 @@ router.get('/my', authenticate, authorize('owner', 'staff'), subscriptionControl
 router.post('/purchase', authenticate, authorize('owner'), subscriptionController.purchasePlan);
 
 // Admin
+router.get('/admin/plans', authenticate, authorize('admin'), subscriptionController.adminGetPlans);
 router.post('/admin/plans', authenticate, authorize('admin'), subscriptionController.adminCreatePlan);
 router.put('/admin/plans/:id', authenticate, authorize('admin'), subscriptionController.adminUpdatePlan);
+router.post('/admin/options', authenticate, authorize('admin'), subscriptionController.adminCreateOption);
 router.put('/admin/options/:id', authenticate, authorize('admin'), subscriptionController.adminUpdateOption);
+router.delete('/admin/options/:id', authenticate, authorize('admin'), subscriptionController.adminDeleteOption);
 
 module.exports = router;

@@ -202,77 +202,198 @@ const createVenueStaff = async (req, res, next) => {
 const getRevenueAnalytics = async (req, res, next) => {
   try {
     const ownerId = req.user.id;
-    const { venue_id } = req.query;
+    const { venue_id, start_date, end_date } = req.query;
     const whereVenue = { owner_id: ownerId };
     if (venue_id) whereVenue.id = venue_id;
 
     const venues = await db.Venue.findAll({ where: whereVenue, attributes: ['id', 'name'] });
     const venueIds = venues.map(v => v.id);
-    if (venueIds.length === 0) return res.json({ success: true, data: { daily: [], monthly: [], totalRevenue: 0, totalBookings: 0 } });
+    if (venueIds.length === 0) return res.json({ success: true, data: { daily: [], monthly: [], totalRevenue: 0, totalBookings: 0, venueReport: [], courtReport: [] } });
 
     const baseWhere = { venue_id: { [Op.in]: venueIds }, payment_status: 'paid', status: { [Op.ne]: 'cancelled' } };
 
-    // 1. Daily revenue — last 30 days
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const dailyRaw = await db.Booking.findAll({
-      attributes: [
-        [db.sequelize.fn('DATE', db.sequelize.col('Booking.created_at')), 'date'],
-        [db.sequelize.fn('SUM', db.sequelize.col('owner_revenue')), 'revenue'],
-        [db.sequelize.fn('COUNT', db.sequelize.col('Booking.id')), 'count'],
-      ],
-      where: { ...baseWhere, created_at: { [Op.gte]: thirtyDaysAgo } },
-      group: [db.sequelize.fn('DATE', db.sequelize.col('Booking.created_at'))],
-      order: [[db.sequelize.fn('DATE', db.sequelize.col('Booking.created_at')), 'ASC']],
-      raw: true
+    if (start_date || end_date) {
+      baseWhere.created_at = {};
+      if (start_date) {
+        baseWhere.created_at[Op.gte] = new Date(`${start_date}T00:00:00`);
+      }
+      if (end_date) {
+        baseWhere.created_at[Op.lte] = new Date(`${end_date}T23:59:59`);
+      }
+    }
+
+    const allVenues = await db.Venue.findAll({
+      where: whereVenue,
+      attributes: ['id', 'name'],
+      include: [
+        {
+          model: db.Court,
+          as: 'courts',
+          attributes: ['id', 'name']
+        }
+      ]
     });
 
-    // Fill missing days with 0
+    const bookings = await db.Booking.findAll({
+      where: baseWhere,
+      include: [
+        {
+          model: db.TimeSlot,
+          as: 'slots',
+          attributes: ['price', 'court_id'],
+          include: [
+            {
+              model: db.Court,
+              as: 'court',
+              attributes: ['id', 'name', 'venue_id']
+            }
+          ]
+        }
+      ]
+    });
+
+    const venueMap = {};
+    const courtMap = {};
     const dailyMap = {};
-    dailyRaw.forEach(r => { dailyMap[r.date] = { revenue: parseFloat(r.revenue), count: parseInt(r.count) }; });
-    const daily = [];
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const key = d.toISOString().split('T')[0];
-      daily.push({ date: key, revenue: dailyMap[key]?.revenue || 0, count: dailyMap[key]?.count || 0 });
-    }
-
-    // 2. Monthly revenue — last 12 months
-    const twelveMonthsAgo = new Date();
-    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
-    twelveMonthsAgo.setDate(1);
-    const monthlyRaw = await db.Booking.findAll({
-      attributes: [
-        [db.sequelize.fn('DATE_FORMAT', db.sequelize.col('Booking.created_at'), '%Y-%m'), 'month'],
-        [db.sequelize.fn('SUM', db.sequelize.col('owner_revenue')), 'revenue'],
-        [db.sequelize.fn('COUNT', db.sequelize.col('Booking.id')), 'count'],
-      ],
-      where: { ...baseWhere, created_at: { [Op.gte]: twelveMonthsAgo } },
-      group: [db.sequelize.fn('DATE_FORMAT', db.sequelize.col('Booking.created_at'), '%Y-%m')],
-      order: [[db.sequelize.fn('DATE_FORMAT', db.sequelize.col('Booking.created_at'), '%Y-%m'), 'ASC']],
-      raw: true
-    });
     const monthlyMap = {};
-    monthlyRaw.forEach(r => { monthlyMap[r.month] = { revenue: parseFloat(r.revenue), count: parseInt(r.count) }; });
-    const monthly = [];
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(); d.setMonth(d.getMonth() - i);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const label = d.toLocaleDateString('vi-VN', { month: 'short', year: 'numeric' });
-      monthly.push({ month: key, label, revenue: monthlyMap[key]?.revenue || 0, count: monthlyMap[key]?.count || 0 });
+
+    allVenues.forEach(v => {
+      venueMap[v.id] = {
+        id: v.id,
+        name: v.name,
+        revenue: 0,
+        count: 0
+      };
+      if (v.courts) {
+        v.courts.forEach(c => {
+          courtMap[c.id] = {
+            id: c.id,
+            name: c.name,
+            venue_id: v.id,
+            venue_name: v.name,
+            revenue: 0,
+            count: 0
+          };
+        });
+      }
+    });
+
+    let totalRevenue = 0;
+    let totalBookings = bookings.length;
+    let onlineCount = 0;
+    let walkinCount = 0;
+
+    bookings.forEach(booking => {
+      const vId = booking.venue_id;
+      const ownerRevenue = parseFloat(booking.owner_revenue || booking.total_price || 0);
+
+      totalRevenue += ownerRevenue;
+      if (booking.booking_type === 'online') {
+        onlineCount += 1;
+      } else if (booking.booking_type === 'walkin') {
+        walkinCount += 1;
+      }
+
+      // Format Date to local YYYY-MM-DD
+      const bDate = booking.created_at || booking.createdAt;
+      const d = new Date(bDate);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const dateStr = `${yyyy}-${mm}-${dd}`;
+      const monthStr = `${yyyy}-${mm}`;
+
+      if (!dailyMap[dateStr]) {
+        dailyMap[dateStr] = { revenue: 0, count: 0 };
+      }
+      dailyMap[dateStr].revenue += ownerRevenue;
+      dailyMap[dateStr].count += 1;
+
+      if (!monthlyMap[monthStr]) {
+        monthlyMap[monthStr] = { revenue: 0, count: 0 };
+      }
+      monthlyMap[monthStr].revenue += ownerRevenue;
+      monthlyMap[monthStr].count += 1;
+
+      if (venueMap[vId]) {
+        venueMap[vId].revenue += ownerRevenue;
+        venueMap[vId].count += 1;
+      }
+
+      const slots = booking.slots || [];
+      const totalSlotsPrice = slots.reduce((sum, s) => sum + parseFloat(s.price || 0), 0);
+
+      const bookedCourtIds = new Set();
+      slots.forEach(s => {
+        if (s.court_id) {
+          bookedCourtIds.add(s.court_id);
+        }
+      });
+
+      bookedCourtIds.forEach(cId => {
+        if (courtMap[cId]) {
+          courtMap[cId].count += 1;
+        }
+      });
+
+      slots.forEach(s => {
+        const cId = s.court_id;
+        if (cId && courtMap[cId]) {
+          const slotPrice = parseFloat(s.price || 0);
+          let allocatedRevenue = 0;
+          if (totalSlotsPrice > 0) {
+            allocatedRevenue = ownerRevenue * (slotPrice / totalSlotsPrice);
+          } else {
+            allocatedRevenue = ownerRevenue / slots.length;
+          }
+          courtMap[cId].revenue += allocatedRevenue;
+        }
+      });
+    });
+
+    let daily = [];
+    if (start_date && end_date) {
+      const [sYear, sMonth, sDay] = start_date.split('-').map(Number);
+      const [eYear, eMonth, eDay] = end_date.split('-').map(Number);
+      const start = new Date(sYear, sMonth - 1, sDay);
+      const end = new Date(eYear, eMonth - 1, eDay);
+
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const key = `${yyyy}-${mm}-${dd}`;
+        daily.push({ date: key, revenue: dailyMap[key]?.revenue || 0, count: dailyMap[key]?.count || 0 });
+      }
+    } else {
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const key = `${yyyy}-${mm}-${dd}`;
+        daily.push({ date: key, revenue: dailyMap[key]?.revenue || 0, count: dailyMap[key]?.count || 0 });
+      }
     }
 
-    // 3. Summary stats
-    const totalRevenue = await db.Booking.sum('owner_revenue', { where: baseWhere }) || 0;
-    const totalBookings = await db.Booking.count({ where: baseWhere });
+    let monthly = [];
+    if (!start_date && !end_date) {
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(); d.setMonth(d.getMonth() - i);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const key = `${yyyy}-${mm}`;
+        const label = d.toLocaleDateString('vi-VN', { month: 'short', year: 'numeric' });
+        monthly.push({ month: key, label, revenue: monthlyMap[key]?.revenue || 0, count: monthlyMap[key]?.count || 0 });
+      }
+    }
 
-    // 4. Booking type breakdown (online vs walkin)
-    const onlineCount = await db.Booking.count({ where: { ...baseWhere, booking_type: 'online' } });
-    const walkinCount = await db.Booking.count({ where: { ...baseWhere, booking_type: 'walkin' } });
+    const venueReport = Object.values(venueMap);
+    const courtReport = Object.values(courtMap);
 
     res.json({
       success: true,
-      data: { daily, monthly, totalRevenue, totalBookings, onlineCount, walkinCount }
+      data: { daily, monthly, totalRevenue, totalBookings, onlineCount, walkinCount, venueReport, courtReport }
     });
   } catch (err) {
     next(err);
@@ -476,7 +597,7 @@ const getOwnerCashflow = async (req, res, next) => {
       const venueIds = venues.map(v => v.id);
       const bookings = await db.Booking.findAll({
         where: { venue_id: { [Op.in]: venueIds }, payment_status: 'paid' },
-        attributes: ['id', 'booking_code', 'owner_revenue', 'total_price', 'created_at']
+        attributes: ['id', 'booking_code', 'owner_revenue', 'total_price', 'createdAt']
       });
       
       bookings.forEach(b => {
