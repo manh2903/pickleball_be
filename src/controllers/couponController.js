@@ -19,7 +19,14 @@ const getOwnerCoupons = async (req, res, next) => {
 
     const coupons = await db.Coupon.findAll({
       where: { venue_id: { [Op.in]: venueIds } },
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
+      include: [
+        {
+          model: db.Venue,
+          as: 'venue',
+          attributes: ['id', 'name']
+        }
+      ]
     });
 
     res.json({ success: true, data: coupons });
